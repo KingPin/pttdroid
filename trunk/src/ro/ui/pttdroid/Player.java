@@ -91,16 +91,16 @@ public class Player extends Thread {
 
 			switch(Settings.getCastType()) {
 			case Settings.BROADCAST:
-				socket = new DatagramSocket(AudioParams.PORT);
+				socket = new DatagramSocket(Settings.getPort());
 				socket.setBroadcast(true);
 				break;
 			case Settings.MULTICAST:
-				multicastSocket = new MulticastSocket(AudioParams.PORT);
+				multicastSocket = new MulticastSocket(Settings.getPort());
 				multicastSocket.joinGroup(Settings.getMulticastAddr());
 				socket = multicastSocket;				
 				break;
 			case Settings.UNICAST:
-				socket = new DatagramSocket(AudioParams.PORT);
+				socket = new DatagramSocket(Settings.getPort());
 				break;
 			}							
 			

@@ -42,6 +42,7 @@ public class Settings extends PreferenceActivity {
 	public static final int UNICAST = 2;
 		
 	private static int castType;	
+	private static int port;
 	private static int speexQuality;	
 	
 	@Override
@@ -68,6 +69,9 @@ public class Settings extends PreferenceActivity {
     				"unicast_addr", 
     				res.getString(R.string.unicast_addr_default)));
     		speexQuality = Integer.parseInt(prefs.getString(
+    				"port", 
+    				res.getString(R.string.port_default)));    		    		
+    		speexQuality = Integer.parseInt(prefs.getString(
     				"speex_quality", 
     				res.getStringArray(R.array.speex_quality_values)[0]));    		
 		}
@@ -91,6 +95,10 @@ public class Settings extends PreferenceActivity {
 	public static InetAddress getUnicastAddr() {
 		return unicastAddr;
 	}	
+	
+	public static int getPort() {
+		return port;
+	}
 	
 	public static int getSpeexQuality() {
 		return speexQuality;

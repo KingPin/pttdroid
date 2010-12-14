@@ -41,9 +41,7 @@ public abstract class AudioParams {
 			ceil(AudioTrack.getMinBufferSize(
 					SAMPLE_RATE, 
 					AudioFormat.CHANNEL_CONFIGURATION_MONO, 
-					ENCODING_PCM_NUM_BITS)));		
-			
-	public static final int PORT = 2010;
+					ENCODING_PCM_NUM_BITS)));			
 	
 	private static int ceil(int size) {
 		return (int) Math.ceil( ( (double) size / FRAME_SIZE )) * FRAME_SIZE;

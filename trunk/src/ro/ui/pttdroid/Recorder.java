@@ -36,7 +36,7 @@ import android.util.Log;
 
 public class Recorder extends Thread {
 	
-	private final int SO_TIMEOUT = 5;
+	private final int SO_TIMEOUT = 0;
 	
 	private AudioRecord recorder;
 	/*
@@ -123,7 +123,7 @@ public class Recorder extends Thread {
 					encodedFrame, 
 					encodedFrame.length, 
 					addr, 
-					AudioParams.PORT);
+					Settings.getPort());
 
 	    	recorder = new AudioRecord(
 	    			AudioSource.MIC, 

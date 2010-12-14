@@ -32,6 +32,14 @@
 				android:singleLine="true"
 				android:inputType="phone" />
 		</PreferenceScreen>		
+
+		<EditTextPreference 
+			android:key="port"
+			android:title="@string/port_title"
+			android:summary="@string/port_summary"
+			android:defaultValue="@string/port_default"
+			android:singleLine="true"
+			android:inputType="number" />					
 		
 		<ListPreference 
 			android:key="speex_quality"
