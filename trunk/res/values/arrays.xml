@@ -12,12 +12,12 @@
 	</string-array>
 	
 	<string-array name="speex_quality">
-		<item>24.6 kbps</item>
+		<item>24.6 kbps (best for voice quality)</item>
 		<item>18.2 kbps</item>		
 		<item>15.0 kbps</item>		
 		<item>11.0 kbps</item>		
 		<item>8.00 kbps</item>
-		<item>5.95 kbps</item>
+		<item>5.95 kbps (best for performance)</item>
 		<item>3.95 kbps</item>
 	</string-array>
 	<string-array name="speex_quality_values">
