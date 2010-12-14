@@ -12,13 +12,13 @@
 	</string-array>
 	
 	<string-array name="speex_quality">
-		<item>24.6 kbit/s</item>
-		<item>18.2 kbit/s</item>		
-		<item>15.0 kbit/s</item>		
-		<item>11.0 kbit/s</item>		
-		<item>8.00 kbit/s</item>
-		<item>5.95 kbit/s</item>
-		<item>3.95 kbit/s</item>
+		<item>24.6 kbps</item>
+		<item>18.2 kbps</item>		
+		<item>15.0 kbps</item>		
+		<item>11.0 kbps</item>		
+		<item>8.00 kbps</item>
+		<item>5.95 kbps</item>
+		<item>3.95 kbps</item>
 	</string-array>
 	<string-array name="speex_quality_values">
 		<item>10</item>
