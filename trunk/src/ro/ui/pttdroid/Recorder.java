@@ -69,7 +69,7 @@ public class Recorder extends Thread {
 					recorder.read(pcmFrame, 0, AudioParams.FRAME_SIZE);
 										
 					// Encode frame
-					Speex.encode(pcmFrame, encodedFrame);					
+					Speex.encode(pcmFrame, encodedFrame);				
 					
 					// Send encoded frame packed within an UDP datagram
 					socket.send(packet);

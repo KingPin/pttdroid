@@ -28,7 +28,6 @@ import java.net.MulticastSocket;
 import ro.ui.pttdroid.codecs.Speex;
 import ro.ui.pttdroid.util.AudioParams;
 import ro.ui.pttdroid.util.PhoneIPs;
-
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -57,7 +56,7 @@ public class Player extends Thread {
 					socket.receive(packet);		
 					if(Settings.getCastType()!=Settings.UNICAST && PhoneIPs.contains(packet.getAddress()))
 						continue;
-																
+															
 					Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
 					player.write(pcmFrame, 0, AudioParams.FRAME_SIZE);							
 				}
