@@ -53,7 +53,7 @@ public class Player extends Thread {
 			init();
 			while(isRunning()) {				
 				try {				
-					socket.receive(packet);		
+					socket.receive(packet);							
 					if(Settings.getCastType()!=Settings.UNICAST && PhoneIPs.contains(packet.getAddress()))
 						continue;
 															
@@ -78,7 +78,7 @@ public class Player extends Thread {
 		}				
 	}
 	
-	private void init() {				
+	private void init() {	
 		try {						
 			player = new AudioTrack(
 					AudioManager.STREAM_MUSIC, 

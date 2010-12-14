@@ -68,7 +68,7 @@ public class Settings extends PreferenceActivity {
     		unicastAddr = InetAddress.getByName(prefs.getString(
     				"unicast_addr", 
     				res.getString(R.string.unicast_addr_default)));
-    		speexQuality = Integer.parseInt(prefs.getString(
+    		port = Integer.parseInt(prefs.getString(
     				"port", 
     				res.getString(R.string.port_default)));    		    		
     		speexQuality = Integer.parseInt(prefs.getString(
