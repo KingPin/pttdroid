@@ -39,7 +39,7 @@
 			android:summary="@string/port_summary"
 			android:defaultValue="@string/port_default"
 			android:singleLine="true"
-			android:inputType="number" />					
+			android:inputType="phone" />					
 		
 		<ListPreference 
 			android:key="speex_quality"
