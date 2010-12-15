@@ -25,6 +25,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,6 +45,12 @@ public class Main extends Activity implements OnTouchListener {
 	
 	private ImageView microphoneImage;	
 	
+	private static final int MIC_STATE_NORMAL = 0;
+	private static final int MIC_STATE_PRESSED = 1;
+	private static final int MIC_STATE_DISABLED = 2;
+	
+	private static int microphoneState = MIC_STATE_NORMAL;
+	
 	/*
 	 * Threads for recording and playing audio data.
 	 * This threads are stopped only if isFinishing() returns true on onDestroy(), meaning the back button was pressed.
@@ -50,6 +58,8 @@ public class Main extends Activity implements OnTouchListener {
 	 */	
 	private static Player player;	
 	private static Recorder recorder;
+	
+	public static Handler handler;
 		
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,7 +93,7 @@ public class Main extends Activity implements OnTouchListener {
     @Override
     public void onDestroy() {
     	super.onDestroy();  
-    	uninit();    	
+    	cleanup();    	
     }
     
     @Override
@@ -107,18 +117,37 @@ public class Main extends Activity implements OnTouchListener {
     	Settings.getSettings(this);     	    	
     }
     
-    public boolean onTouch(View v, MotionEvent e) {    	    	
-    	switch(e.getAction()) {
-    	case MotionEvent.ACTION_DOWN:
-    		recorder.resumeAudio();
-    		microphoneImage.setImageResource(R.drawable.microphone_pressed_image);
-    		break;
-    	case MotionEvent.ACTION_UP:    		
-    		microphoneImage.setImageResource(R.drawable.microphone_normal_image);
-    		recorder.pauseAudio();
-    		break;
+    public boolean onTouch(View v, MotionEvent e) {
+    	if(microphoneState!=MIC_STATE_DISABLED) {
+    		switch(e.getAction()) {
+    		case MotionEvent.ACTION_DOWN:
+    			recorder.resumeAudio();
+    			setMicrophoneState(MIC_STATE_PRESSED);
+    			break;
+    		case MotionEvent.ACTION_UP:
+    			setMicrophoneState(MIC_STATE_NORMAL);
+    			recorder.pauseAudio();
+    			break;
+    		}
     	}
     	return true;
+    }
+    
+    public void setMicrophoneState(int state) {
+    	switch(state) {
+    	case MIC_STATE_NORMAL:
+    		microphoneState = MIC_STATE_NORMAL;
+    		microphoneImage.setImageResource(R.drawable.microphone_normal_image);
+    		break;
+    	case MIC_STATE_PRESSED:
+    		microphoneState = MIC_STATE_PRESSED;
+    		microphoneImage.setImageResource(R.drawable.microphone_pressed_image);
+    		break;
+    	case MIC_STATE_DISABLED:
+    		microphoneState = MIC_STATE_DISABLED;
+    		microphoneImage.setImageResource(R.drawable.microphone_disabled_image);
+    		break;    		
+    	}
     }
     
     private void init() {
@@ -136,7 +165,9 @@ public class Main extends Activity implements OnTouchListener {
     		Settings.getSettings(this);
     		    	    	    		
     		player = new Player();    		    		     		    	
-    		recorder = new Recorder();    		    		    		    		
+    		recorder = new Recorder();   
+    		
+    		initHandler();
     		
     		player.start();
     		recorder.start();
@@ -144,8 +175,8 @@ public class Main extends Activity implements OnTouchListener {
     		isStarting = false;    		
     	}
     }
-    
-    private void uninit() {    	
+        
+    private void cleanup() {    	
     	// If the back key was pressed.
     	if(isFinishing()) {
 
@@ -167,5 +198,27 @@ public class Main extends Activity implements OnTouchListener {
     		isStarting = true;     		
     	}
     }
-        
+    
+    private void initHandler() {
+    	handler = new Handler() {
+    	
+    		public static final int ACTION_ENABLE = 0;
+    		public static final int ACTION_DISABLE = 1;
+    	
+    		@Override
+    		public void handleMessage(Message msg) {
+    			switch(msg.what) {
+    			case ACTION_ENABLE:
+    				setMicrophoneState(MIC_STATE_NORMAL);
+    				break;
+    			case ACTION_DISABLE:
+    				if(recorder.isRunning())
+    					recorder.pauseAudio();
+    				setMicrophoneState(MIC_STATE_DISABLED);
+    				break;
+    			}
+    		};    	
+    	};
+    }
+    
 }
