@@ -3,7 +3,6 @@ package ro.ui.pttdroid;
 import ro.ui.pttdroid.codecs.Speex;
 import ro.ui.pttdroid.settings.AudioSettings;
 import ro.ui.pttdroid.settings.CommSettings;
-import android.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.AudioManager;
