@@ -3,7 +3,7 @@
 		<CheckBoxPreference 
 			android:key="use_speex"
 			android:title="@string/use_speex_title"
-			android:defaultValue="false"
+			android:defaultValue="true"
 			android:summaryOn="@string/use_speex_on"
 			android:summaryOff="@string/use_speex_off" />								
 		
