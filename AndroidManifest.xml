@@ -26,13 +26,7 @@
         <activity android:name=".settings.AudioSettings"
         		android:label="@string/settings_audio_name"
         		android:theme="@android:style/Theme.NoTitleBar.Fullscreen">        	
-        </activity>
-        
-    	<activity android:name=".Measurements"
-    			android:label="@string/measurements_label"
-    			android:screenOrientation="portrait"
-    			android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-    	</activity>
+        </activity>                
 </application>
     <uses-sdk android:minSdkVersion="4" />
 

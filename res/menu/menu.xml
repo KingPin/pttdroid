@@ -10,8 +10,4 @@
 				android:title="@string/settings_audio_label" />
 		</menu>		
 	</item>
-	<item android:id="@+id/measurements"
-		android:icon="@drawable/measurements_icon"
-		android:title="@string/measurements_label">
-	</item>
 </menu>
