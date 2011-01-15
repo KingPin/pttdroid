@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"        
+    >
+    <RelativeLayout android:orientation="horizontal"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"    	     
+    	>
+    	<TextView    		
+    		android:layout_width="wrap_content"
+    		android:layout_height="wrap_content"
+    		android:text="@string/datagram_size_label"    		    		
+    		android:layout_alignParentLeft="true">
+    	</TextView>
+    	<TextView
+    		android:id="@+id/datagram_size_text"
+    		android:layout_width="wrap_content"
+    		android:layout_height="wrap_content"
+    		android:text="320"    		
+    		android:layout_alignParentRight="true">
+    	</TextView>
+    </RelativeLayout>
+    <SeekBar
+    	android:id="@+id/datagram_size"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+		android:max="31"
+		android:progress="31"    	
+		android:layout_marginBottom="5dip"
+    	>
+    </SeekBar>
+    
+    <RelativeLayout android:orientation="horizontal"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"    	            
+    	>
+    	<TextView    		
+    		android:layout_width="wrap_content"
+    		android:layout_height="wrap_content"
+    		android:text="@string/datagrams_to_send_label"    		    		
+    		android:layout_alignParentLeft="true">
+    	</TextView>
+    	<TextView
+    		android:id="@+id/datagrams_to_send_text"
+    		android:layout_width="wrap_content"
+    		android:layout_height="wrap_content"
+    		android:text="100"    		
+    		android:layout_alignParentRight="true">
+    	</TextView>
+    </RelativeLayout>
+    <SeekBar
+    	android:id="@+id/datagrams_to_send"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+		android:max="49"
+		android:progress="9"    	
+		android:layout_marginBottom="5dip"
+    	>
+    </SeekBar>
+    
+	<LinearLayout
+    	android:orientation="horizontal"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:gravity="center_horizontal"    	       
+    	>
+    	<Button 
+    		android:id="@+id/ping_button"
+    		android:layout_width="100dip"
+    		android:layout_height="wrap_content"
+    		android:text="@string/ping_button_label" />
+    	<Button 
+    		android:id="@+id/reply_button"
+    		android:layout_width="100dip"
+    		android:layout_height="wrap_content"
+    		android:text="@string/reply_button_label" />    		    		    		    		    		    		    		
+	</LinearLayout>    
+
+	<TextView 		
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/report" />	
+	<TextView 
+		android:id="@+id/send_report"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/send_report"
+		android:visibility="gone" />
+	<TextView 
+		android:id="@+id/receive_report"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:text="@string/receive_report"
+		android:visibility="gone" />    
+</LinearLayout>    	   	  	         	    	
