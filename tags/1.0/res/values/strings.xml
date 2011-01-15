@@ -45,24 +45,5 @@
 		<string name="echo_title">Echo</string>
 		<string name="echo_on">Turn off</string>		
 		<string name="echo_off">Turn on</string>	
-	
-	<string name="measurements_label">Measurements</string>
-
-		<string name="datagram_size_label">DATAGRAM SIZE</string>	
-		<string name="datagrams_to_send_label">DATAGRAMS TO SEND/RECEIVE</string>
-		<string name="ping_button_label">PING</string>
-		<string name="reply_button_label">REPLY</string>
-		
-		<string name="ping_progress_title">Pinging ...</string>
-		<string name="reply_progress_title">Replying ...</string>
-		
-		<string name="report"><b><u>REPORT:</u></b></string>
-		<string name="send_report"># Sent datagrams: [datagramsSent] \n</string>
-		<string name="receive_report"># Received datagrams: [datagramsReceived] \n
-			# Unordered datagrams: [unorderedDatagrams] \n
-			# Minimum delay: [minDelay] \n
-			# Maximum delay: [maxDelay] \n
-			# Average delay: [averageDelay] \n
-		</string>
-    		
+	    		
 </resources>
