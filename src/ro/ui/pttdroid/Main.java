@@ -101,10 +101,6 @@ public class Main extends Activity implements OnTouchListener {
     		i = new Intent(this, AudioSettings.class);
     		startActivityForResult(i, 0);    		
     		return true;    		    		
-    	case R.id.measurements:
-    		i = new Intent(this, Measurements.class);
-    		startActivity(i);    		    		
-    		return true;
     	default:
     		return super.onOptionsItemSelected(item);
     	}
