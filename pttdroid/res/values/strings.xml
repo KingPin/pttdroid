@@ -44,6 +44,10 @@
     	
 		<string name="echo_title">Echo</string>
 		<string name="echo_on">Turn off</string>		
-		<string name="echo_off">Turn on</string>	
+		<string name="echo_off">Turn on</string>
+		
+    <string name="settings_reset_all_name">Reset All</string>
+    <string name="settings_reset_all_label">Reset All</string>
+    	<string name="setting_reset_all_confirm">All settings were restored to their default values</string>			
 	    		
 </resources>
