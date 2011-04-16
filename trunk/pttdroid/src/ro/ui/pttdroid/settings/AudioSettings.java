@@ -25,6 +25,10 @@ public class AudioSettings extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.settings_audio);		
 	}	
 	
+	/**
+	 * Update cache settings
+	 * @param context
+	 */
 	public static void getSettings(Context context) {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		Resources res = context.getResources();

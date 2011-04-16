@@ -5,16 +5,21 @@ import ro.ui.pttdroid.settings.AudioSettings;
 import ro.ui.pttdroid.settings.CommSettings;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 public class Main extends Activity implements OnTouchListener {
 	
@@ -89,7 +94,7 @@ public class Main extends Activity implements OnTouchListener {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-    	Intent i;
+    	Intent i; 
     	
     	switch(item.getItemId()) {
     	case R.id.settings_comm:
@@ -99,10 +104,30 @@ public class Main extends Activity implements OnTouchListener {
     	case R.id.settings_audio:
     		i = new Intent(this, AudioSettings.class);
     		startActivityForResult(i, 0);    		
-    		return true;    		    		
+    		return true;    
+    	case R.id.settings_reset_all:
+    		return resetAllSettings();    		
     	default:
     		return super.onOptionsItemSelected(item);
     	}
+    }
+    
+    /**
+     * Reset all settings to their default value
+     * @return
+     */
+    private boolean resetAllSettings() {
+    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    	
+    	Editor editor = prefs.edit();
+    	editor.clear();
+    	editor.commit();   
+    	
+    	Toast toast = Toast.makeText(this, getString(R.string.setting_reset_all_confirm), Toast.LENGTH_SHORT);
+    	toast.setGravity(Gravity.CENTER, 0, 0);
+    	toast.show();
+
+    	return true;
     }
     
     @Override
