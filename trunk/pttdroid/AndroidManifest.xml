@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="ro.ui.pttdroid"
-      android:versionName="1.1" android:versionCode="2">
+      android:versionName="1.2" android:versionCode="3">
+      
+    <uses-sdk android:minSdkVersion="4" />
       
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />    
@@ -26,7 +28,6 @@
         		android:label="@string/settings_audio_name"
         		android:theme="@android:style/Theme.NoTitleBar.Fullscreen">        	
         </activity>                
-</application>
-    <uses-sdk android:minSdkVersion="4" />
+</application>    
 
 </manifest> 
