@@ -25,7 +25,10 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
-public class AudioSettings extends PreferenceActivity {
+
+
+public class AudioSettings extends PreferenceActivity 
+{
 	
 	private static boolean useSpeex;
 	private static int speexQuality;
@@ -37,7 +40,8 @@ public class AudioSettings extends PreferenceActivity {
 	public static final boolean ECHO_OFF = false;	
 	
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) 
+	{
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings_audio);		
 	}	
@@ -46,7 +50,8 @@ public class AudioSettings extends PreferenceActivity {
 	 * Update cache settings
 	 * @param context
 	 */
-	public static void getSettings(Context context) {
+	public static void getSettings(Context context) 
+	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		Resources res = context.getResources();
 		
@@ -61,15 +66,18 @@ public class AudioSettings extends PreferenceActivity {
     			ECHO_OFF);    		
 	}
 	
-	public static boolean useSpeex() {
+	public static boolean useSpeex() 
+	{
 		return useSpeex;
 	}	
 
-	public static int getSpeexQuality() {
+	public static int getSpeexQuality() 
+	{
 		return speexQuality;
 	}
 	
-	public static boolean getEchoState() {
+	public static boolean getEchoState() 
+	{
 		return echoState;
 	}		
 

@@ -21,15 +21,17 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import ro.ui.pttdroid.R;
+import ro.ui.pttdroid.util.Log;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.util.Log;
 
-public class CommSettings extends PreferenceActivity {
+
+public class CommSettings extends PreferenceActivity 
+{
 	
 	private static InetAddress broadcastAddr;
 	private static InetAddress multicastAddr;
@@ -43,7 +45,8 @@ public class CommSettings extends PreferenceActivity {
 	private static int port;	
 	
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(Bundle savedInstanceState) 
+	{
 		super.onCreate(savedInstanceState);
 		addPreferencesFromResource(R.xml.settings_comm);		
 	}		
@@ -52,11 +55,13 @@ public class CommSettings extends PreferenceActivity {
 	 * Update cache settings
 	 * @param context
 	 */
-	public static void getSettings(Context context) {
+	public static void getSettings(Context context)
+	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		Resources res = context.getResources();
 		
-		try {
+		try 
+		{
     		castType = Integer.parseInt(prefs.getString(
     				"cast_type", 
     				res.getStringArray(R.array.cast_types_values)[0]));			
@@ -73,28 +78,34 @@ public class CommSettings extends PreferenceActivity {
     				"port", 
     				res.getString(R.string.port_default)));
 		}
-		catch(UnknownHostException e) {
-			Log.d("CommSettings", e.getMessage());
+		catch(UnknownHostException e) 
+		{
+			Log.error(CommSettings.class, e);
 		}
 	}
 	
-	public static int getCastType() {
+	public static int getCastType() 
+	{
 		return castType;
 	}
 		
-	public static InetAddress getBroadcastAddr() {
+	public static InetAddress getBroadcastAddr() 
+	{
 		return broadcastAddr;
 	}	
 	
-	public static InetAddress getMulticastAddr() {
+	public static InetAddress getMulticastAddr() 
+	{
 		return multicastAddr;
 	}
 	
-	public static InetAddress getUnicastAddr() {
+	public static InetAddress getUnicastAddr() 
+	{
 		return unicastAddr;
 	}	
 	
-	public static int getPort() {
+	public static int getPort() 
+	{
 		return port;
 	}		
 

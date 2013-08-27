@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>    
     <string name="app_name">pttdroid</string>
+    <string name="app_running">pttdroid is running</string>
 
     <string name="settings_name">pttdroid Settings</string>
     <string name="settings_label">Settings</string>
