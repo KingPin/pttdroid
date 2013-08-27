@@ -17,21 +17,52 @@ along with pttdroid.  If not, see <http://www.gnu.org/licenses/>. */
 
 package ro.ui.pttdroid.codecs;
 
-public class Speex {
+public class Speex 
+{
 	
-	static {
+	static 
+	{
 		System.loadLibrary("speex_jni");
 	}
 	
 	private static final int[] encodedSizes = {6, 10, 15, 20, 20, 28, 28, 38, 38, 46, 62};
 	
-	public static int getEncodedSize(int quality) {
+	/**
+	 * 
+	 * @param quality
+	 * @return
+	 */
+	public static int getEncodedSize(int quality) 
+	{
 		return encodedSizes[quality];
 	}
 
+	/**
+	 * 
+	 * @param quality
+	 */
 	public static native void open(int quality);
+	
+	/**
+	 * 
+	 * @param in
+	 * @param length
+	 * @param out
+	 * @return
+	 */
     public static native int decode(byte[] in, int length, short[] out);
+    
+    /**
+     * 
+     * @param in
+     * @param out
+     * @return
+     */
     public static native int encode(short[] in, byte[] out);
+    
+    /**
+     * 
+     */
     public static native void close();	
 	
 }

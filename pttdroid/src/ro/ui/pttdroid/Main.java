@@ -17,18 +17,22 @@ along with pttdroid.  If not, see <http://www.gnu.org/licenses/>. */
 
 package ro.ui.pttdroid;
 
+import ro.ui.pttdroid.Player.PlayerBinder;
 import ro.ui.pttdroid.codecs.Speex;
 import ro.ui.pttdroid.settings.AudioSettings;
 import ro.ui.pttdroid.settings.CommSettings;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -38,7 +42,8 @@ import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class Main extends Activity implements OnTouchListener {
+public class Main extends Activity implements OnTouchListener 
+{
 	
 	/*
 	 * True if the activity is really starting for the first time.
@@ -54,12 +59,8 @@ public class Main extends Activity implements OnTouchListener {
 	
 	private static int microphoneState = MIC_STATE_NORMAL;
 	
-	/*
-	 * Threads for recording and playing audio data.
-	 * This threads are stopped only if isFinishing() returns true on onDestroy(), meaning the back button was pressed.
-	 * With other words, recorder and player threads will still be running if an screen orientation event occurs.
-	 */	
-	private static Player player;	
+	private static Intent 	playerIntent;
+	private static Player	player;
 	private static Recorder recorder;	
 	
 	// Block recording when playing  something.
@@ -67,50 +68,47 @@ public class Main extends Activity implements OnTouchListener {
 	private static Runnable runnable;
 	private static int storedProgress = 0;	
 	private static final int PROGRESS_CHECK_PERIOD = 100;
+	
+	private static ServiceConnection playerServiceConnection = new ServiceConnection() 
+	{	
+		public void onServiceDisconnected(ComponentName arg0) 
+		{						
+			player = null;
+		}
+		
+		public void onServiceConnected(ComponentName arg0, IBinder arg1) 
+		{
+			player = ((PlayerBinder) arg1).getService();
+		}
+	};
 		
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) 
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);        
                                       
         init();        
     }
-    
+                    
     @Override
-    public void onStart() {
-    	super.onStart();
+    public void onDestroy() 
+    {
+    	super.onDestroy();
     	
-    	// Initialize codec 
-    	Speex.open(AudioSettings.getSpeexQuality());
-    	
-    	player.resumeAudio();
-    }
-    
-    @Override
-    public void onStop() {
-    	super.onStop();
-    	
-    	player.pauseAudio();
-    	recorder.pauseAudio();    	
-    	
-    	// Release codec resources
-    	Speex.close();
-    }
-            
-    @Override
-    public void onDestroy() {
-    	super.onDestroy();  
     	release();    	
     }
     
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu) 
+    {
     	getMenuInflater().inflate(R.menu.menu, menu);
     	return true;
     }
     
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) 
+    {
     	Intent i; 
     	
     	switch(item.getItemId()) {
@@ -133,7 +131,8 @@ public class Main extends Activity implements OnTouchListener {
      * Reset all settings to their default value
      * @return
      */
-    private boolean resetAllSettings() {
+    private boolean resetAllSettings() 
+    {
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     	
     	Editor editor = prefs.edit();
@@ -148,13 +147,16 @@ public class Main extends Activity implements OnTouchListener {
     }
     
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) 
+    {
     	CommSettings.getSettings(this);     	    	
     	AudioSettings.getSettings(this);    	
     }
     
-    public boolean onTouch(View v, MotionEvent e) {
-    	if(getMicrophoneState()!=MIC_STATE_DISABLED) {    		
+    public boolean onTouch(View v, MotionEvent e) 
+    {
+    	if(getMicrophoneState()!=MIC_STATE_DISABLED) 
+    	{    		
     		switch(e.getAction()) {
     		case MotionEvent.ACTION_DOWN:    			
     			recorder.resumeAudio();
@@ -169,7 +171,8 @@ public class Main extends Activity implements OnTouchListener {
     	return true;
     }
     
-    public synchronized void setMicrophoneState(int state) {
+    public synchronized void setMicrophoneState(int state) 
+    {
     	switch(state) {
     	case MIC_STATE_NORMAL:
     		microphoneState = MIC_STATE_NORMAL;
@@ -186,11 +189,13 @@ public class Main extends Activity implements OnTouchListener {
     	}
     }
     
-    public synchronized int getMicrophoneState() {
+    public synchronized int getMicrophoneState() 
+    {
     	return microphoneState;
     }
     
-    private void init() {
+    private void init() 
+    {
     	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
     	microphoneImage.setOnTouchListener(this);    	    	    	    	    	
     	
@@ -201,26 +206,38 @@ public class Main extends Activity implements OnTouchListener {
     	 * If the activity is first time created and not destroyed and created again like on an orientation screen change event.
     	 * This will be executed only once.
     	 */    	    	    	    	
-    	if(isStarting) {    		
+    	if(isStarting) 
+    	{    		
     		CommSettings.getSettings(this);
     		AudioSettings.getSettings(this);
+    		
+    		//
+    		Speex.open(AudioSettings.getSpeexQuality());
     		    	    	    		
-    		player = new Player();    		    		     		    	
+    		playerIntent = new Intent(this, Player.class);
+    		bindService(playerIntent, playerServiceConnection, Context.BIND_AUTO_CREATE);
+    		
+    		//
     		recorder = new Recorder();
+    		recorder.start();     		
     		
     		// Disable microphone when receiving data.
     		runnable = new Runnable() {
 				
-				public void run() {					
+				public void run() 
+				{					
 					int currentProgress = player.getProgress();
 					
-					if(currentProgress!=storedProgress) {
-						if(getMicrophoneState()!=MIC_STATE_DISABLED) {
+					if(currentProgress!=storedProgress) 
+					{
+						if(getMicrophoneState()!=MIC_STATE_DISABLED) 
+						{
 							recorder.pauseAudio();
 							setMicrophoneState(MIC_STATE_DISABLED);							
 						}						 							
 					}
-					else {
+					else 
+					{
 						if(getMicrophoneState()==MIC_STATE_DISABLED)
 							setMicrophoneState(MIC_STATE_NORMAL);
 					}
@@ -229,33 +246,28 @@ public class Main extends Activity implements OnTouchListener {
 					handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
 				}
 			};
-    		
-    		handler.removeCallbacks(runnable);
+    		    		
     		handler.postDelayed(runnable, PROGRESS_CHECK_PERIOD);
-    		
-    		player.start();
-    		recorder.start(); 
-    		
+    		    		
     		isStarting = false;    		
     	}
     }
     
-    private void release() {    	
+    private void release() 
+    {    	
     	// If the back key was pressed.
-    	if(isFinishing()) {
+    	if(isFinishing()) 
+    	{
     		handler.removeCallbacks(runnable);
 
-    		// Force threads to finish.
-    		player.finish();    		    		
+    		// 
+    		unbindService(playerServiceConnection);    		    		
     		recorder.finish();
     		
-    		try {
-    			player.join();
-    			recorder.join();
-    		}
-    		catch(InterruptedException e) {
-    			Log.d("PTT", e.toString());
-    		}
+    		//Issue #1 (Doesn't work in background)
+        	Speex.close();
+
+    		
     		player = null;
     		recorder = null;
     	    		

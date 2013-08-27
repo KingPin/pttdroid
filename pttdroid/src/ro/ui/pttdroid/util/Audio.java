@@ -21,7 +21,9 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 
-public abstract class AudioParams {
+
+public abstract class Audio 
+{
 	
 	public static final int SAMPLE_RATE = 8000;
 	public static final int FRAME_SIZE = 160;
@@ -35,6 +37,7 @@ public abstract class AudioParams {
 					SAMPLE_RATE, 
 					AudioFormat.CHANNEL_CONFIGURATION_MONO, 
 					ENCODING_PCM_NUM_BITS)));
+	
 	public static final int TRACK_BUFFER_SIZE = Math.max(
 			FRAME_SIZE, 
 			ceil(AudioTrack.getMinBufferSize(
@@ -42,8 +45,14 @@ public abstract class AudioParams {
 					AudioFormat.CHANNEL_CONFIGURATION_MONO, 
 					ENCODING_PCM_NUM_BITS)));			
 	
-	private static int ceil(int size) {
-		return (int) Math.ceil( ( (double) size / FRAME_SIZE )) * FRAME_SIZE;
+	/**
+	 * 
+	 * @param size
+	 * @return
+	 */
+	private static int ceil(int size) 
+	{
+		return (int) Math.ceil(((double) size / FRAME_SIZE )) * FRAME_SIZE;
 	}
 		
 }

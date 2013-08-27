@@ -23,32 +23,44 @@ import java.net.NetworkInterface;
 import java.util.Enumeration;
 import java.util.LinkedList;
 
-import android.util.Log;
 
-public class PhoneIPs {
+public class IP 
+{
 	
-	static private LinkedList<InetAddress> inetAddresses = new LinkedList<InetAddress>(); 
+	static private LinkedList<InetAddress> addresses = new LinkedList<InetAddress>(); 
 
-	public static void load() {
-		inetAddresses.clear();
-		try {
-			Enumeration<NetworkInterface> networkInterfaceEnum = NetworkInterface.getNetworkInterfaces();
+	/**
+	 * 
+	 */
+	public static void load() 
+	{
+		addresses.clear();
+		try 
+		{
+			Enumeration<NetworkInterface> ni = NetworkInterface.getNetworkInterfaces();
 			
-			while(networkInterfaceEnum.hasMoreElements()) {								
-				Enumeration<InetAddress> inetAddresseEnum = networkInterfaceEnum.nextElement().getInetAddresses();
+			while(ni.hasMoreElements()) 
+			{								
+				Enumeration<InetAddress> inetAddresseEnum = ni.nextElement().getInetAddresses();
 				
-				while(inetAddresseEnum.hasMoreElements()) {
-					inetAddresses.add(inetAddresseEnum.nextElement());
-				}
+				while(inetAddresseEnum.hasMoreElements())
+					addresses.add(inetAddresseEnum.nextElement());
 			}
 		}
-		catch(IOException e) {
-			Log.d("MyNetworkInterfaces", e.toString());
+		catch(IOException e) 
+		{
+			Log.error(IP.class, e);
 		}
 	}
 	
-	public static boolean contains(InetAddress addr) {
-		return inetAddresses.contains(addr);
+	/**
+	 * 
+	 * @param addr
+	 * @return
+	 */
+	public static boolean contains(InetAddress addr) 
+	{
+		return addresses.contains(addr);
 	}
 	
 }
