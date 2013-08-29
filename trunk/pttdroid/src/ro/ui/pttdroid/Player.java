@@ -232,7 +232,7 @@ public class Player extends Service implements Runnable
 		return isFinishing;
 	}
 	
-	private synchronized void finish() 
+	public synchronized void finish() 
 	{
 		pauseAudio();
 		isFinishing = true;

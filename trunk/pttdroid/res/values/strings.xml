@@ -49,6 +49,8 @@
 		
     <string name="settings_reset_all_name">Reset All</string>
     <string name="settings_reset_all_label">Reset All</string>
-    	<string name="setting_reset_all_confirm">All settings were restored to their default values</string>			
+    	<string name="setting_reset_all_confirm">All settings were restored to their default values</string>
+    	
+    <string name="quit_label">Quit</string>			
 	    		
 </resources>
