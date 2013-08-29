@@ -12,4 +12,8 @@
 				android:title="@string/settings_reset_all_label" />				
 		</menu>		
 	</item>
+	<item android:id="@+id/quit"
+		android:icon="@drawable/quit_icon"
+		android:title="@string/quit_label">
+	</item>
 </menu>

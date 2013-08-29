@@ -45,11 +45,7 @@ import android.widget.Toast;
 public class Main extends Activity implements OnTouchListener 
 {
 	
-	/*
-	 * True if the activity is really starting for the first time.
-	 * False if the activity starts after it was previously closed by a configuration change, like screen orientation. 
-	 */
-	private static boolean isStarting = true;	
+	private static boolean isFirstLaunch = true;	
 	
 	private ImageView microphoneImage;	
 	
@@ -57,46 +53,37 @@ public class Main extends Activity implements OnTouchListener
 	public static final int MIC_STATE_PRESSED = 1;
 	public static final int MIC_STATE_DISABLED = 2;
 	
-	private static int microphoneState = MIC_STATE_NORMAL;
-	
-	private static Intent 	playerIntent;
-	private static Player	player;
-	private static Recorder recorder;	
-	
-	// Block recording when playing  something.
-	private static Handler handler = new Handler();
-	private static Runnable runnable;
-	private static int storedProgress = 0;	
-	private static final int PROGRESS_CHECK_PERIOD = 100;
-	
-	private static ServiceConnection playerServiceConnection = new ServiceConnection() 
-	{	
-		public void onServiceDisconnected(ComponentName arg0) 
-		{						
-			player = null;
-		}
+	private int microphoneState = MIC_STATE_NORMAL;
 		
-		public void onServiceConnected(ComponentName arg0, IBinder arg1) 
-		{
-			player = ((PlayerBinder) arg1).getService();
-		}
-	};
+	private static volatile	Player	player;
+	private static Recorder 		recorder;	
+	
+	// Block recording when playing
+	private Handler 			handler = new Handler();
+	private MicrophoneSwitcher 	microphoneSwitcher;
+	private static int 			storedProgress = 0;	
+	private static final int 	PROGRESS_CHECK_PERIOD = 100;
+	
+	private static ServiceConnection playerServiceConnection;
 		
     @Override
     public void onCreate(Bundle savedInstanceState) 
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);        
-                                      
-        init();        
+                      
+        init();  
+        
+		microphoneSwitcher = new MicrophoneSwitcher();
+		handler.postDelayed(microphoneSwitcher, PROGRESS_CHECK_PERIOD);
     }
                     
     @Override
     public void onDestroy() 
     {
     	super.onDestroy();
-    	
-    	release();    	
+    
+    	handler.removeCallbacks(microphoneSwitcher);
     }
     
     @Override
@@ -112,6 +99,10 @@ public class Main extends Activity implements OnTouchListener
     	Intent i; 
     	
     	switch(item.getItemId()) {
+    	case R.id.quit:
+    		release();
+    		finish();
+    		return true;
     	case R.id.settings_comm:
     		i = new Intent(this, CommSettings.class);
     		startActivityForResult(i, 0);    		
@@ -198,82 +189,79 @@ public class Main extends Activity implements OnTouchListener
     {
     	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
     	microphoneImage.setOnTouchListener(this);    	    	    	    	    	
-    	
-    	// When the volume keys will be pressed the audio stream volume will be changed. 
-    	setVolumeControlStream(AudioManager.STREAM_MUSIC);
     	    	    	
-    	/*
-    	 * If the activity is first time created and not destroyed and created again like on an orientation screen change event.
-    	 * This will be executed only once.
-    	 */    	    	    	    	
-    	if(isStarting) 
+    	if(isFirstLaunch) 
     	{    		
     		CommSettings.getSettings(this);
     		AudioSettings.getSettings(this);
     		
+    		// 
+        	setVolumeControlStream(AudioManager.STREAM_MUSIC);
+    		
     		//
     		Speex.open(AudioSettings.getSpeexQuality());
     		    	    	    		
-    		playerIntent = new Intent(this, Player.class);
+    		Intent playerIntent = new Intent(this, Player.class);
+    		playerServiceConnection = new PlayerServiceConnection();
     		bindService(playerIntent, playerServiceConnection, Context.BIND_AUTO_CREATE);
     		
     		//
     		recorder = new Recorder();
-    		recorder.start();     		
-    		
-    		// Disable microphone when receiving data.
-    		runnable = new Runnable() {
-				
-				public void run() 
-				{					
-					int currentProgress = player.getProgress();
-					
-					if(currentProgress!=storedProgress) 
-					{
-						if(getMicrophoneState()!=MIC_STATE_DISABLED) 
-						{
-							recorder.pauseAudio();
-							setMicrophoneState(MIC_STATE_DISABLED);							
-						}						 							
-					}
-					else 
-					{
-						if(getMicrophoneState()==MIC_STATE_DISABLED)
-							setMicrophoneState(MIC_STATE_NORMAL);
-					}
-					
-					storedProgress = currentProgress;
-					handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
-				}
-			};
+    		recorder.start();     		    		
     		    		
-    		handler.postDelayed(runnable, PROGRESS_CHECK_PERIOD);
-    		    		
-    		isStarting = false;    		
+    		isFirstLaunch = false;    		
     	}
     }
     
     private void release() 
     {    	
-    	// If the back key was pressed.
-    	if(isFinishing()) 
-    	{
-    		handler.removeCallbacks(runnable);
-
-    		// 
-    		unbindService(playerServiceConnection);    		    		
-    		recorder.finish();
+    	unbindService(playerServiceConnection);    		    		
+    	recorder.finish();
     		
-    		//Issue #1 (Doesn't work in background)
-        	Speex.close();
-
-    		
-    		player = null;
-    		recorder = null;
-    	    		
-    		// Resetting isStarting.
-    		isStarting = true;     		
-    	}
+        Speex.close();        	
     }     
+    
+    private class PlayerServiceConnection implements ServiceConnection
+	{	
+		public void onServiceDisconnected(ComponentName arg0) 
+		{					
+			player.finish();			
+		}
+		
+		public void onServiceConnected(ComponentName arg0, IBinder arg1) 
+		{
+			player = ((PlayerBinder) arg1).getService();			
+		}
+	};
+	
+	private class MicrophoneSwitcher implements Runnable
+	{	
+		public void run() 
+		{					
+			
+			if(player!=null)
+			{
+				int currentProgress = player.getProgress();
+			
+				if(currentProgress!=storedProgress) 
+				{
+					if(getMicrophoneState()!=MIC_STATE_DISABLED) 
+					{
+						recorder.pauseAudio();
+						setMicrophoneState(MIC_STATE_DISABLED);							
+					}						 							
+				}
+				else 
+				{
+					if(getMicrophoneState()==MIC_STATE_DISABLED)
+						setMicrophoneState(MIC_STATE_NORMAL);
+				}
+			
+				storedProgress = currentProgress;
+			}
+			
+			handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
+		}
+	};
         
 }
