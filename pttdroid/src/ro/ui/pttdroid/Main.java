@@ -42,27 +42,15 @@ import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-public class Main extends Activity implements OnTouchListener 
+public class Main extends Activity
 {
 	
 	private static boolean isFirstLaunch = true;	
-	
-	private ImageView microphoneImage;	
-	
-	public static final int MIC_STATE_NORMAL = 0;
-	public static final int MIC_STATE_PRESSED = 1;
-	public static final int MIC_STATE_DISABLED = 2;
-	
-	private int microphoneState = MIC_STATE_NORMAL;
-		
+			
 	private static volatile	Player	player;
 	private static Recorder 		recorder;	
 	
-	// Block recording when playing
-	private Handler 			handler = new Handler();
 	private MicrophoneSwitcher 	microphoneSwitcher;
-	private static int 			storedProgress = 0;	
-	private static final int 	PROGRESS_CHECK_PERIOD = 100;
 	
 	private static ServiceConnection playerServiceConnection;
 		
@@ -75,15 +63,15 @@ public class Main extends Activity implements OnTouchListener
         init();  
         
 		microphoneSwitcher = new MicrophoneSwitcher();
-		handler.postDelayed(microphoneSwitcher, PROGRESS_CHECK_PERIOD);
+		microphoneSwitcher.init();
     }
                     
     @Override
     public void onDestroy() 
     {
-    	super.onDestroy();
-    
-    	handler.removeCallbacks(microphoneSwitcher);
+    	microphoneSwitcher.release();
+    	
+    	super.onDestroy();    	
     }
     
     @Override
@@ -144,52 +132,8 @@ public class Main extends Activity implements OnTouchListener
     	AudioSettings.getSettings(this);    	
     }
     
-    public boolean onTouch(View v, MotionEvent e) 
-    {
-    	if(getMicrophoneState()!=MIC_STATE_DISABLED) 
-    	{    		
-    		switch(e.getAction()) {
-    		case MotionEvent.ACTION_DOWN:    			
-    			recorder.resumeAudio();
-    			setMicrophoneState(MIC_STATE_PRESSED);
-    			break;
-    		case MotionEvent.ACTION_UP:
-    			setMicrophoneState(MIC_STATE_NORMAL);
-    			recorder.pauseAudio();    			
-    			break;
-    		}
-    	}
-    	return true;
-    }
-    
-    public synchronized void setMicrophoneState(int state) 
-    {
-    	switch(state) {
-    	case MIC_STATE_NORMAL:
-    		microphoneState = MIC_STATE_NORMAL;
-    		microphoneImage.setImageResource(R.drawable.microphone_normal_image);
-    		break;
-    	case MIC_STATE_PRESSED:
-    		microphoneState = MIC_STATE_PRESSED;
-    		microphoneImage.setImageResource(R.drawable.microphone_pressed_image);
-    		break;
-    	case MIC_STATE_DISABLED:
-    		microphoneState = MIC_STATE_DISABLED;
-    		microphoneImage.setImageResource(R.drawable.microphone_disabled_image);
-    		break;    		
-    	}
-    }
-    
-    public synchronized int getMicrophoneState() 
-    {
-    	return microphoneState;
-    }
-    
     private void init() 
-    {
-    	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
-    	microphoneImage.setOnTouchListener(this);    	    	    	    	    	
-    	    	    	
+    {    	    	    	
     	if(isFirstLaunch) 
     	{    		
     		CommSettings.getSettings(this);
@@ -234,34 +178,99 @@ public class Main extends Activity implements OnTouchListener
 		}
 	};
 	
-	private class MicrophoneSwitcher implements Runnable
+	private class MicrophoneSwitcher implements Runnable, OnTouchListener 
 	{	
+		private Handler handler = new Handler();
+
+		private ImageView microphoneImage;	
+		
+		public static final int MIC_STATE_NORMAL = 0;
+		public static final int MIC_STATE_PRESSED = 1;
+		public static final int MIC_STATE_DISABLED = 2;
+		
+		private int microphoneState = MIC_STATE_NORMAL;
+		
+		private int previousProgress = 0;
+		
+		private static final int 	PROGRESS_CHECK_PERIOD = 100;
+		
+		public void init()
+		{
+	    	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
+	    	microphoneImage.setOnTouchListener(this);
+	    	
+	    	handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
+		}
+	    
 		public void run() 
 		{					
-			
-			if(player!=null)
-			{
-				int currentProgress = player.getProgress();
-			
-				if(currentProgress!=storedProgress) 
+			synchronized(this) 
+			{			
+				if(player!=null)
 				{
-					if(getMicrophoneState()!=MIC_STATE_DISABLED) 
+					int currentProgress = player.getProgress();
+
+					if(currentProgress > previousProgress) 
 					{
-						recorder.pauseAudio();
-						setMicrophoneState(MIC_STATE_DISABLED);							
-					}						 							
+						if(microphoneState!=MIC_STATE_DISABLED) 
+						{
+							recorder.pauseAudio();
+							setMicrophoneState(MIC_STATE_DISABLED);							
+						}						 							
+					}
+					else 
+					{
+						if(microphoneState==MIC_STATE_DISABLED)
+							setMicrophoneState(MIC_STATE_NORMAL);
+					}
+
+					previousProgress = currentProgress;
 				}
-				else 
-				{
-					if(getMicrophoneState()==MIC_STATE_DISABLED)
-						setMicrophoneState(MIC_STATE_NORMAL);
-				}
-			
-				storedProgress = currentProgress;
+
+				handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
 			}
-			
-			handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
 		}
+		
+		public boolean onTouch(View v, MotionEvent e) 
+	    {
+	    	if(microphoneState!=MicrophoneSwitcher.MIC_STATE_DISABLED) 
+	    	{    		
+	    		switch(e.getAction()) {
+	    		case MotionEvent.ACTION_DOWN:    			
+	    			recorder.resumeAudio();
+	    			setMicrophoneState(MicrophoneSwitcher.MIC_STATE_PRESSED);
+	    			break;
+	    		case MotionEvent.ACTION_UP:
+	    			setMicrophoneState(MicrophoneSwitcher.MIC_STATE_NORMAL);
+	    			recorder.pauseAudio();    			
+	    			break;
+	    		}
+	    	}
+	    	return true;
+	    }
+		public void setMicrophoneState(int state) 
+	    {
+	    	switch(state) {
+	    	case MIC_STATE_NORMAL:
+	    		microphoneState = MIC_STATE_NORMAL;
+	    		microphoneImage.setImageResource(R.drawable.microphone_normal_image);
+	    		break;
+	    	case MIC_STATE_PRESSED:
+	    		microphoneState = MIC_STATE_PRESSED;
+	    		microphoneImage.setImageResource(R.drawable.microphone_pressed_image);
+	    		break;
+	    	case MIC_STATE_DISABLED:
+	    		microphoneState = MIC_STATE_DISABLED;
+	    		microphoneImage.setImageResource(R.drawable.microphone_disabled_image);
+	    		break;    		
+	    	}
+	    }
+	    
+		public void release()
+		{
+			handler.removeCallbacks(microphoneSwitcher);			
+		}
+		
 	};
         
 }
