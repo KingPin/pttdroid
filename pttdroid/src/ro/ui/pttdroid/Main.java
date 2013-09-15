@@ -45,7 +45,7 @@ import android.widget.Toast;
 public class Main extends Activity
 {
 	
-	private static boolean isFirstLaunch = true;	
+	private static boolean firstLaunch = true;	
 			
 	private static volatile	Player	player;
 	private static Recorder 		recorder;	
@@ -69,7 +69,7 @@ public class Main extends Activity
     @Override
     public void onDestroy() 
     {
-    	microphoneSwitcher.release();
+    	microphoneSwitcher.shutdown();
     	
     	super.onDestroy();    	
     }
@@ -88,8 +88,7 @@ public class Main extends Activity
     	
     	switch(item.getItemId()) {
     	case R.id.quit:
-    		release();
-    		finish();
+    		shutdown();
     		return true;
     	case R.id.settings_comm:
     		i = new Intent(this, CommSettings.class);
@@ -118,7 +117,7 @@ public class Main extends Activity
     	editor.clear();
     	editor.commit();   
     	
-    	Toast toast = Toast.makeText(this, getString(R.string.setting_reset_all_confirm), Toast.LENGTH_SHORT);
+    	Toast toast = Toast.makeText(this, getString(R.string.setting_reset_all_confirm), Toast.LENGTH_SHORT);    	
     	toast.setGravity(Gravity.CENTER, 0, 0);
     	toast.show();
 
@@ -134,42 +133,39 @@ public class Main extends Activity
     
     private void init() 
     {    	    	    	
-    	if(isFirstLaunch) 
+    	if(firstLaunch) 
     	{    		
     		CommSettings.getSettings(this);
     		AudioSettings.getSettings(this);
-    		
-    		// 
+    		 
         	setVolumeControlStream(AudioManager.STREAM_MUSIC);
     		
-    		//
     		Speex.open(AudioSettings.getSpeexQuality());
     		    	    	    		
     		Intent playerIntent = new Intent(this, Player.class);
     		playerServiceConnection = new PlayerServiceConnection();
     		bindService(playerIntent, playerServiceConnection, Context.BIND_AUTO_CREATE);
     		
-    		//
     		recorder = new Recorder();
     		recorder.start();     		    		
     		    		
-    		isFirstLaunch = false;    		
+    		firstLaunch = false;    		
     	}
     }
     
-    private void release() 
+    private void shutdown() 
     {    	
     	unbindService(playerServiceConnection);    		    		
-    	recorder.finish();
-    		
-        Speex.close();        	
+    	recorder.shutdown();    		
+        Speex.close();                   
+        finish();
     }     
     
     private class PlayerServiceConnection implements ServiceConnection
 	{	
 		public void onServiceDisconnected(ComponentName arg0) 
 		{					
-			player.finish();			
+			player.shutdown();			
 		}
 		
 		public void onServiceConnected(ComponentName arg0, IBinder arg1) 
@@ -180,9 +176,9 @@ public class Main extends Activity
 	
 	private class MicrophoneSwitcher implements Runnable, OnTouchListener 
 	{	
-		private Handler handler = new Handler();
+		private Handler 	handler = new Handler();
 
-		private ImageView microphoneImage;	
+		private ImageView 	microphoneImage;	
 		
 		public static final int MIC_STATE_NORMAL = 0;
 		public static final int MIC_STATE_PRESSED = 1;
@@ -194,6 +190,8 @@ public class Main extends Activity
 		
 		private static final int 	PROGRESS_CHECK_PERIOD = 100;
 		
+		private volatile boolean running = false;
+		
 		public void init()
 		{
 	    	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
@@ -202,33 +200,31 @@ public class Main extends Activity
 	    	handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
 		}
 	    
-		public void run() 
+		public synchronized void run() 
 		{					
-			synchronized(this) 
-			{			
-				if(player!=null)
+			if(running)
+			{
+				int currentProgress = player.getProgress();
+
+				if(currentProgress > previousProgress) 
 				{
-					int currentProgress = player.getProgress();
-
-					if(currentProgress > previousProgress) 
+					if(microphoneState!=MIC_STATE_DISABLED) 
 					{
-						if(microphoneState!=MIC_STATE_DISABLED) 
-						{
-							recorder.pauseAudio();
-							setMicrophoneState(MIC_STATE_DISABLED);							
-						}						 							
-					}
-					else 
-					{
-						if(microphoneState==MIC_STATE_DISABLED)
-							setMicrophoneState(MIC_STATE_NORMAL);
-					}
-
-					previousProgress = currentProgress;
+						recorder.pauseAudio();
+						setMicrophoneState(MIC_STATE_DISABLED);							
+					}						 							
 				}
+				else 
+				{
+					if(microphoneState==MIC_STATE_DISABLED)
+						setMicrophoneState(MIC_STATE_NORMAL);
+				}
+
+				previousProgress = currentProgress;
 
 				handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
 			}
+				
 		}
 		
 		public boolean onTouch(View v, MotionEvent e) 
@@ -266,9 +262,10 @@ public class Main extends Activity
 	    	}
 	    }
 	    
-		public void release()
+		public synchronized void shutdown()
 		{
 			handler.removeCallbacks(microphoneSwitcher);			
+			running = false;
 		}
 		
 	};
