@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ro.ui.pttdroid.codecs.Speex;
 import ro.ui.pttdroid.settings.AudioSettings;
@@ -45,8 +46,8 @@ public class Player extends Service implements Runnable
 	private Thread 	playerThread;
 	private IBinder playerBinder = new PlayerBinder();
 	
-	private boolean isRunning = true;	
-	private boolean isFinishing = false;	
+	private volatile boolean playing = true;	
+	private volatile boolean running = true;	
 	
 	private DatagramSocket 	socket;
 	private MulticastSocket multicastSocket;
@@ -55,7 +56,7 @@ public class Player extends Service implements Runnable
 	private short[] pcmFrame = new short[Audio.FRAME_SIZE];
 	private byte[] 	encodedFrame;
 	
-	private int progress = 0;
+	private AtomicInteger progress = new AtomicInteger(0);
 	
 	public class PlayerBinder extends Binder 
 	{
@@ -90,7 +91,7 @@ public class Player extends Service implements Runnable
 	@Override
     public boolean onUnbind(Intent intent) 
 	{
-		finish();
+		shutdown();
         return false;
     }
 	
@@ -98,10 +99,13 @@ public class Player extends Service implements Runnable
 	{
 		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);				 
 		
-		while(!isFinishing()) 
+		init();
+		
+		while(isRunning()) 
 		{			
-			init();
-			while(isRunning()) 
+			player.play();
+			
+			while(isPlaying()) 
 			{								
 				try 
 				{				
@@ -122,29 +126,34 @@ public class Player extends Service implements Runnable
 						player.write(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
 					}	
 					
-					// Make some progress
-					makeProgress();
+					progress.incrementAndGet();
 				}
 				catch(IOException e) 
 				{
 					Log.error(getClass(), e);
 				}	
 			}		
+			
+			player.stop();
 		
-			release();	
-			synchronized(this) 
-			{
-				try 
-				{	
-					if(!isFinishing())
-						this.wait();
-				}
-				catch(InterruptedException e) 
+			try 
+			{	
+				synchronized(this) 
 				{
-					Log.error(getClass(), e);
+					if(isRunning())
+						wait();					
 				}
-			}			
-		}				
+			}
+			catch(InterruptedException e) 
+			{
+				Log.error(getClass(), e);
+			}
+		}
+
+		//Release allocated resources
+		player.release();
+		leaveGroup();
+		socket.close();
 	}
 	
 	private void init() 
@@ -180,9 +189,7 @@ public class Player extends Service implements Runnable
 			else 
 				encodedFrame = new byte[Audio.FRAME_SIZE_IN_BYTES];
 			
-			packet = new DatagramPacket(encodedFrame, encodedFrame.length);			
-			
-			player.play();				
+			packet = new DatagramPacket(encodedFrame, encodedFrame.length);							
 		}
 		catch(IOException e) 
 		{
@@ -190,78 +197,50 @@ public class Player extends Service implements Runnable
 		}		
 	}
 	
-	private void release() 
+	private synchronized boolean isPlaying()
 	{
-		if(player!=null) 
-		{
-			player.stop();		
-			player.release();
-		}
+		return playing;
 	}
 	
-	private synchronized void makeProgress() 
+	private synchronized boolean isRunning()
 	{
-		progress++;
+		return running;
 	}
-	
-	public synchronized int getProgress() 
+		
+	public int getProgress() 
 	{
-		return progress;
+		return progress.intValue();
 	}
-	
-	private synchronized boolean isRunning() 
-	{
-		return isRunning;
-	}
-	
+		
 	public synchronized void resumeAudio() 
 	{
-		isRunning = true;
-		this.notify();
+		playing = true;		
+		notify();
 	}
 		
 	public synchronized void pauseAudio() 
 	{
-		isRunning = false;
-		leaveGroup();
-		socket.close();
+		playing = false;		
 	}
-		
-	private synchronized boolean isFinishing() 
-	{
-		return isFinishing;
-	}
-	
-	public synchronized void finish() 
+			
+	public synchronized void shutdown() 
 	{
 		pauseAudio();
-		isFinishing = true;
-		this.notify();
+		running = true;
+		notify();
 	}
-	
+		
 	private void leaveGroup() 
 	{
 		try 
 		{
-			multicastSocket.leaveGroup(CommSettings.getMulticastAddr());
+			if(multicastSocket!=null)
+				multicastSocket.leaveGroup(CommSettings.getMulticastAddr());
 		}
-		catch(IOException e) 
+		catch(Exception e) 
 		{
 			Log.error(getClass(), e);
 		}
-		catch(NullPointerException e) 
-		{
-			Log.error(getClass(), e);
-		}		
 	}
-	
-	/**
-	 * 
-	 * @throws InterruptedException
-	 */
-	public void join() throws InterruptedException
-	{
-		playerThread.join();
-	}
-		
+			
 }

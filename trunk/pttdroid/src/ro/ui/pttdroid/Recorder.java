@@ -40,18 +40,8 @@ public class Recorder extends Thread
 	
 	private AudioRecord recorder;
 	
-	/*
-	 * True if thread is running, false otherwise.
-	 * This boolean is used for internal synchronization.
-	 */
-	private boolean isRunning = false;
-	
-	/*
-	 * True if thread is safely stopped.
-	 * This boolean must be false in order to be able to start the thread.
-	 * After changing it to true the thread is finished, without the ability to start it again.
-	 */
-	private boolean isFinishing = false;
+	private volatile boolean recording = false;
+	private volatile boolean running = true;
 	
 	private DatagramSocket socket;
 	private DatagramPacket packet;
@@ -64,12 +54,14 @@ public class Recorder extends Thread
 		// Set audio specific thread priority
 		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 		
-		while(!isFinishing()) 
+		init();
+		
+		while(isRunning()) 
 		{		
-			init();
-			while(isRunning()) 
+			recorder.startRecording();
+			
+			while(isRecording()) 
 			{
-				
 				try 
 				{		
 					// Read PCM from the microphone buffer & encode it
@@ -79,9 +71,7 @@ public class Recorder extends Thread
 						Speex.encode(pcmFrame, encodedFrame);						
 					}
 					else 
-					{
 						recorder.read(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);						
-					}
 																		
 					// Send encoded frame packed within an UDP datagram
 					socket.send(packet);
@@ -91,26 +81,26 @@ public class Recorder extends Thread
 					Log.error(getClass(), e);
 				}	
 			}		
-		
-			release();	
 			
-			/*
-			 * While is not running block the thread.
-			 * By doing it, CPU time is saved.
-			 */
-			synchronized(this) 
-			{
-				try 
-				{	
-					if(!isFinishing())
-						this.wait();
-				}
-				catch(InterruptedException e) 
+			recorder.stop();
+					
+			try 
+			{	
+				synchronized(this)
 				{
-					Log.error(getClass(), e);
+					if(isRunning())
+						wait();
 				}
-			}					
-		}							
+			}
+			catch(InterruptedException e) 
+			{
+				Log.error(getClass(), e);
+			}
+		}		
+		
+		//Release allocated resources
+		socket.close();				
+		recorder.release();
 	}
 	
 	private void init() 
@@ -153,9 +143,7 @@ public class Recorder extends Thread
 	    			Audio.SAMPLE_RATE, 
 	    			AudioFormat.CHANNEL_CONFIGURATION_MONO, 
 	    			Audio.ENCODING_PCM_NUM_BITS, 
-	    			Audio.RECORD_BUFFER_SIZE);
-	    	
-			recorder.startRecording();				
+	    			Audio.RECORD_BUFFER_SIZE);							
 		}
 		catch(SocketException e) 
 		{
@@ -163,42 +151,32 @@ public class Recorder extends Thread
 		}	
 	}
 	
-	private void release() 
-	{			
-		if(recorder!=null) 
-		{
-			recorder.stop();
-			recorder.release();
-		}
-	}
-	
-	public synchronized boolean isRunning() 
+	private synchronized boolean isRecording()
 	{
-		return isRunning;
+		return recording;
 	}
 	
+	private synchronized boolean isRunning()
+	{
+		return running;
+	}
+		
 	public synchronized void resumeAudio() 
 	{				
-		isRunning = true;
-		this.notify();
+		recording = true;			
+		notify();
 	}
 		
 	public synchronized void pauseAudio() 
 	{				
-		isRunning = false;	
-		socket.close();
+		recording = false;			
 	}	 
-		
-	public synchronized boolean isFinishing() 
-	{
-		return isFinishing;
-	}
-	
-	public synchronized void finish() 
+			
+	public synchronized void shutdown() 
 	{
 		pauseAudio();
-		isFinishing = true;		
-		this.notify();
+		running = false;		
+		notify();
 	}
-	
+		
 }
