@@ -37,7 +37,7 @@
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">        	
         </activity>
         
-        <service android:name="Player"></service>
+        <service android:name=".Player"></service>
                         
 	</application>    
 

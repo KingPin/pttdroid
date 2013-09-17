@@ -39,24 +39,11 @@ import android.media.AudioTrack;
 import android.os.Binder;
 import android.os.IBinder;
 
-public class Player extends Service implements Runnable
+public class Player extends Service
 {
-		
-	private AudioTrack 	player;
-	private Thread 	playerThread;
+	private PlayerThread 	playerThread;
+	
 	private IBinder playerBinder = new PlayerBinder();
-	
-	private volatile boolean playing = true;	
-	private volatile boolean running = true;	
-	
-	private DatagramSocket 	socket;
-	private MulticastSocket multicastSocket;
-	private DatagramPacket 	packet;	
-	
-	private short[] pcmFrame = new short[Audio.FRAME_SIZE];
-	private byte[] 	encodedFrame;
-	
-	private AtomicInteger progress = new AtomicInteger(0);
 	
 	public class PlayerBinder extends Binder 
 	{
@@ -69,7 +56,10 @@ public class Player extends Service implements Runnable
 	@Override
     public void onCreate() 
 	{
-		Notification notification = new Notification(R.drawable.icon, 
+		playerThread = new PlayerThread();
+		playerThread.start();		
+		
+		Notification notification = new Notification(R.drawable.notif_icon, 
 				getText(R.string.app_name),
 		        System.currentTimeMillis());
 		Intent notificationIntent = new Intent(this, Main.class);
@@ -80,167 +70,193 @@ public class Player extends Service implements Runnable
     }
 	
 	@Override
+	public int onStartCommand(Intent intent, int flags, int startId)
+	{			
+		return START_NOT_STICKY;
+	}
+	
+	@Override
     public IBinder onBind(Intent intent)
 	{    
-		playerThread = new Thread(this);
-		playerThread.start();
-		
 		return playerBinder;
     }	
 	
 	@Override
-    public boolean onUnbind(Intent intent) 
+	public void onDestroy() 
 	{
-		shutdown();
-        return false;
-    }
+		playerThread.shutdown();
+	}
 	
-	public void run() 
+	public int getProgress() 
 	{
-		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);				 
+		return playerThread.getProgress();
+	}
+	
+	private class PlayerThread extends Thread
+	{
+		private AudioTrack 	player;
 		
-		init();
+		private volatile boolean playing = true;	
+		private volatile boolean running = true;	
 		
-		while(isRunning()) 
-		{			
-			player.play();
+		private DatagramSocket 	socket;
+		private MulticastSocket multicastSocket;
+		private DatagramPacket 	packet;	
+		
+		private short[] pcmFrame = new short[Audio.FRAME_SIZE];
+		private byte[] 	encodedFrame;
+		
+		private AtomicInteger progress = new AtomicInteger(0);
+		
+		public void run() 
+		{
+			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);				 
 			
-			while(isPlaying()) 
-			{								
-				try 
-				{				
-					socket.receive(packet);	
-					
-					// If echo is turned off and I was the packet sender then skip playing
-					if(AudioSettings.getEchoState()==AudioSettings.ECHO_OFF && IP.contains(packet.getAddress()))
-						continue;
-					
-					// Decode audio
-					if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
-					{
-						Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
-						player.write(pcmFrame, 0, Audio.FRAME_SIZE);
+			init();
+			
+			while(isRunning()) 
+			{			
+				player.play();
+				
+				while(isPlaying()) 
+				{								
+					try 
+					{				
+						socket.receive(packet);	
+						
+						// If echo is turned off and I was the packet sender then skip playing
+						if(AudioSettings.getEchoState()==AudioSettings.ECHO_OFF && IP.contains(packet.getAddress()))
+							continue;
+						
+						// Decode audio
+						if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
+						{
+							Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
+							player.write(pcmFrame, 0, Audio.FRAME_SIZE);
+						}
+						else 
+						{			
+							player.write(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
+						}	
+						
+						progress.incrementAndGet();
 					}
-					else 
-					{			
-						player.write(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
+					catch(IOException e) 
+					{
+						Log.error(getClass(), e);
 					}	
-					
-					progress.incrementAndGet();
+				}		
+				
+				player.stop();
+			
+				try 
+				{	
+					synchronized(this) 
+					{
+						if(isRunning())
+							wait();					
+					}
 				}
-				catch(IOException e) 
+				catch(InterruptedException e) 
 				{
 					Log.error(getClass(), e);
-				}	
-			}		
-			
-			player.stop();
-		
-			try 
-			{	
-				synchronized(this) 
-				{
-					if(isRunning())
-						wait();					
 				}
 			}
-			catch(InterruptedException e) 
+
+			//Release allocated resources
+			player.release();
+			leaveGroup();
+			socket.close();
+		}
+		
+		private void init() 
+		{	
+			try 
+			{						
+				player = new AudioTrack(
+						AudioManager.STREAM_MUSIC, 
+						Audio.SAMPLE_RATE, 
+						AudioFormat.CHANNEL_CONFIGURATION_MONO, 
+						Audio.ENCODING_PCM_NUM_BITS, 
+						Audio.TRACK_BUFFER_SIZE, 
+						AudioTrack.MODE_STREAM);	
+
+				switch(CommSettings.getCastType()) 
+				{
+					case CommSettings.BROADCAST:
+						socket = new DatagramSocket(CommSettings.getPort());
+						socket.setBroadcast(true);
+					break;
+					case CommSettings.MULTICAST:
+						multicastSocket = new MulticastSocket(CommSettings.getPort());
+						multicastSocket.joinGroup(CommSettings.getMulticastAddr());
+						socket = multicastSocket;				
+					break;
+					case CommSettings.UNICAST:
+						socket = new DatagramSocket(CommSettings.getPort());
+					break;
+				}							
+				
+				if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
+					encodedFrame = new byte[Speex.getEncodedSize(AudioSettings.getSpeexQuality())];
+				else 
+					encodedFrame = new byte[Audio.FRAME_SIZE_IN_BYTES];
+				
+				packet = new DatagramPacket(encodedFrame, encodedFrame.length);							
+			}
+			catch(IOException e) 
+			{
+				Log.error(getClass(), e);
+			}		
+		}
+		
+		private synchronized boolean isPlaying()
+		{
+			return playing;
+		}
+		
+		private synchronized boolean isRunning()
+		{
+			return running;
+		}
+			
+		public int getProgress() 
+		{
+			return progress.intValue();
+		}
+			
+		@SuppressWarnings("unused")
+		private synchronized void resumeAudio() 
+		{
+			playing = true;		
+			notify();
+		}
+			
+		private synchronized void pauseAudio() 
+		{
+			playing = false;		
+		}
+				
+		private synchronized void shutdown() 
+		{
+			pauseAudio();
+			running = false;
+			notify();
+		}
+			
+		private void leaveGroup() 
+		{
+			try 
+			{
+				if(multicastSocket!=null)
+					multicastSocket.leaveGroup(CommSettings.getMulticastAddr());
+			}
+			catch(Exception e) 
 			{
 				Log.error(getClass(), e);
 			}
 		}
 
-		//Release allocated resources
-		player.release();
-		leaveGroup();
-		socket.close();
-	}
-	
-	private void init() 
-	{	
-		try 
-		{						
-			player = new AudioTrack(
-					AudioManager.STREAM_MUSIC, 
-					Audio.SAMPLE_RATE, 
-					AudioFormat.CHANNEL_CONFIGURATION_MONO, 
-					Audio.ENCODING_PCM_NUM_BITS, 
-					Audio.TRACK_BUFFER_SIZE, 
-					AudioTrack.MODE_STREAM);	
-
-			switch(CommSettings.getCastType()) 
-			{
-				case CommSettings.BROADCAST:
-					socket = new DatagramSocket(CommSettings.getPort());
-					socket.setBroadcast(true);
-				break;
-				case CommSettings.MULTICAST:
-					multicastSocket = new MulticastSocket(CommSettings.getPort());
-					multicastSocket.joinGroup(CommSettings.getMulticastAddr());
-					socket = multicastSocket;				
-				break;
-				case CommSettings.UNICAST:
-					socket = new DatagramSocket(CommSettings.getPort());
-				break;
-			}							
-			
-			if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
-				encodedFrame = new byte[Speex.getEncodedSize(AudioSettings.getSpeexQuality())];
-			else 
-				encodedFrame = new byte[Audio.FRAME_SIZE_IN_BYTES];
-			
-			packet = new DatagramPacket(encodedFrame, encodedFrame.length);							
-		}
-		catch(IOException e) 
-		{
-			Log.error(getClass(), e);
-		}		
-	}
-	
-	private synchronized boolean isPlaying()
-	{
-		return playing;
-	}
-	
-	private synchronized boolean isRunning()
-	{
-		return running;
-	}
-		
-	public int getProgress() 
-	{
-		return progress.intValue();
-	}
-		
-	public synchronized void resumeAudio() 
-	{
-		playing = true;		
-		notify();
-	}
-		
-	public synchronized void pauseAudio() 
-	{
-		playing = false;		
-	}
-			
-	public synchronized void shutdown() 
-	{
-		pauseAudio();
-		running = true;
-		notify();
-	}
-		
-	private void leaveGroup() 
-	{
-		try 
-		{
-			if(multicastSocket!=null)
-				multicastSocket.leaveGroup(CommSettings.getMulticastAddr());
-		}
-		catch(Exception e) 
-		{
-			Log.error(getClass(), e);
-		}
 	}
 			
 }

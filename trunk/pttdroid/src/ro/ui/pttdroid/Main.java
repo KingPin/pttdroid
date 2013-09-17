@@ -52,7 +52,7 @@ public class Main extends Activity
 	
 	private MicrophoneSwitcher 	microphoneSwitcher;
 	
-	private static ServiceConnection playerServiceConnection;
+	private static Intent 		playerIntent;
 		
     @Override
     public void onCreate(Bundle savedInstanceState) 
@@ -60,10 +60,7 @@ public class Main extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);        
                       
-        init();  
-        
-		microphoneSwitcher = new MicrophoneSwitcher();
-		microphoneSwitcher.init();
+        init();          
     }
                     
     @Override
@@ -141,36 +138,38 @@ public class Main extends Activity
         	setVolumeControlStream(AudioManager.STREAM_MUSIC);
     		
     		Speex.open(AudioSettings.getSpeexQuality());
-    		    	    	    		
-    		Intent playerIntent = new Intent(this, Player.class);
-    		playerServiceConnection = new PlayerServiceConnection();
-    		bindService(playerIntent, playerServiceConnection, Context.BIND_AUTO_CREATE);
+    		    	    	 
+    		playerIntent = new Intent(this, Player.class);            
+            startService(playerIntent);                		
     		
     		recorder = new Recorder();
     		recorder.start();     		    		
     		    		
     		firstLaunch = false;    		
     	}
+    	
+		microphoneSwitcher = new MicrophoneSwitcher();
+		microphoneSwitcher.init();
     }
     
     private void shutdown() 
-    {    	
-    	unbindService(playerServiceConnection);    		    		
+    {    	  
+    	stopService(playerIntent);
     	recorder.shutdown();    		
         Speex.close();                   
         finish();
     }     
     
     private class PlayerServiceConnection implements ServiceConnection
-	{	
-		public void onServiceDisconnected(ComponentName arg0) 
-		{					
-			player.shutdown();			
-		}
-		
+	{					
 		public void onServiceConnected(ComponentName arg0, IBinder arg1) 
 		{
 			player = ((PlayerBinder) arg1).getService();			
+		}
+		
+		public void onServiceDisconnected(ComponentName arg0) 
+		{					
+			player = null;		
 		}
 	};
 	
@@ -188,15 +187,22 @@ public class Main extends Activity
 		
 		private int previousProgress = 0;
 		
-		private static final int 	PROGRESS_CHECK_PERIOD = 100;
+		private static final int	PROGRESS_CHECK_PERIOD = 100;
 		
-		private volatile boolean running = false;
+		private volatile boolean	running = false;
+		
+		private ServiceConnection	playerServiceConnection;
 		
 		public void init()
 		{
 	    	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
 	    	microphoneImage.setOnTouchListener(this);
-	    	
+	    
+	    	 
+	    	Intent intent = new Intent(Main.this, Player.class); 
+    		playerServiceConnection = new PlayerServiceConnection();
+    		bindService(intent, playerServiceConnection, Context.BIND_AUTO_CREATE);
+
 	    	handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
 		}
 	    
@@ -264,6 +270,7 @@ public class Main extends Activity
 	    
 		public synchronized void shutdown()
 		{
+			unbindService(playerServiceConnection);
 			handler.removeCallbacks(microphoneSwitcher);			
 			running = false;
 		}
