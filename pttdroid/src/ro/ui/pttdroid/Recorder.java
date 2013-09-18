@@ -33,11 +33,8 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 
-public class Recorder extends Thread 
-{
-	
-	private final int SO_TIMEOUT = 0;
-	
+public class Recorder extends Thread
+{	
 	private AudioRecord recorder;
 	
 	private volatile boolean recording = false;
@@ -64,16 +61,16 @@ public class Recorder extends Thread
 			{
 				try 
 				{		
-					// Read PCM from the microphone buffer & encode it
 					if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
 					{
 						recorder.read(pcmFrame, 0, Audio.FRAME_SIZE);
 						Speex.encode(pcmFrame, encodedFrame);						
 					}
-					else 
-						recorder.read(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);						
-																		
-					// Send encoded frame packed within an UDP datagram
+					else
+					{
+						recorder.read(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
+					}
+																		 
 					socket.send(packet);
 				}
 				catch(IOException e) 
@@ -94,11 +91,11 @@ public class Recorder extends Thread
 			}
 			catch(InterruptedException e) 
 			{
-				Log.error(getClass(), e);
+				//Do nothing, the recorder is shutting down
 			}
 		}		
 		
-		//Release allocated resources
+		//
 		socket.close();				
 		recorder.release();
 	}
@@ -109,8 +106,7 @@ public class Recorder extends Thread
 		{	    	
 			IP.load();
 			
-			socket = new DatagramSocket();
-			socket.setSoTimeout(SO_TIMEOUT);
+			socket = new DatagramSocket();			
 			InetAddress addr = null;
 			
 			switch(CommSettings.getCastType()) 
@@ -151,12 +147,12 @@ public class Recorder extends Thread
 		}	
 	}
 	
-	private synchronized boolean isRecording()
+	public synchronized boolean isRecording()
 	{
 		return recording;
 	}
 	
-	private synchronized boolean isRunning()
+	public synchronized boolean isRunning()
 	{
 		return running;
 	}
@@ -169,7 +165,7 @@ public class Recorder extends Thread
 		
 	public synchronized void pauseAudio() 
 	{				
-		recording = false;			
+		recording = false;					
 	}	 
 			
 	public synchronized void shutdown() 

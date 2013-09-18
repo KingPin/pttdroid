@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
+import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ro.ui.pttdroid.codecs.Speex;
@@ -99,8 +100,7 @@ public class Player extends Service
 		private volatile boolean playing = true;	
 		private volatile boolean running = true;	
 		
-		private DatagramSocket 	socket;
-		private MulticastSocket multicastSocket;
+		private DatagramSocket 	socket;		
 		private DatagramPacket 	packet;	
 		
 		private short[] pcmFrame = new short[Audio.FRAME_SIZE];
@@ -123,12 +123,10 @@ public class Player extends Service
 					try 
 					{				
 						socket.receive(packet);	
-						
-						// If echo is turned off and I was the packet sender then skip playing
+												
 						if(AudioSettings.getEchoState()==AudioSettings.ECHO_OFF && IP.contains(packet.getAddress()))
 							continue;
 						
-						// Decode audio
 						if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
 						{
 							Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
@@ -140,6 +138,10 @@ public class Player extends Service
 						}	
 						
 						progress.incrementAndGet();
+					}
+					catch(SocketException e) 
+					{
+						//Do nothing, the player is shutting down
 					}
 					catch(IOException e) 
 					{
@@ -159,14 +161,21 @@ public class Player extends Service
 				}
 				catch(InterruptedException e) 
 				{
-					Log.error(getClass(), e);
+					//Do nothing, the player is shutting down
 				}
 			}
 
-			//Release allocated resources
+			//
+			try
+			{
+				if(socket instanceof MulticastSocket)
+					((MulticastSocket) socket).leaveGroup(CommSettings.getMulticastAddr());
+			}
+			catch (IOException e) 
+			{
+				Log.error(getClass(), e);
+			}			
 			player.release();
-			leaveGroup();
-			socket.close();
 		}
 		
 		private void init() 
@@ -188,9 +197,8 @@ public class Player extends Service
 						socket.setBroadcast(true);
 					break;
 					case CommSettings.MULTICAST:
-						multicastSocket = new MulticastSocket(CommSettings.getPort());
-						multicastSocket.joinGroup(CommSettings.getMulticastAddr());
-						socket = multicastSocket;				
+						socket = new MulticastSocket(CommSettings.getPort());
+						((MulticastSocket) socket).joinGroup(CommSettings.getMulticastAddr());										
 					break;
 					case CommSettings.UNICAST:
 						socket = new DatagramSocket(CommSettings.getPort());
@@ -210,12 +218,12 @@ public class Player extends Service
 			}		
 		}
 		
-		private synchronized boolean isPlaying()
+		public synchronized boolean isPlaying()
 		{
 			return playing;
 		}
 		
-		private synchronized boolean isRunning()
+		public synchronized boolean isRunning()
 		{
 			return running;
 		}
@@ -226,35 +234,24 @@ public class Player extends Service
 		}
 			
 		@SuppressWarnings("unused")
-		private synchronized void resumeAudio() 
+		public synchronized void resumeAudio() 
 		{
 			playing = true;		
 			notify();
 		}
 			
-		private synchronized void pauseAudio() 
+		public synchronized void pauseAudio() 
 		{
-			playing = false;		
+			playing = false;				
 		}
 				
-		private synchronized void shutdown() 
+		public synchronized void shutdown() 
 		{
 			pauseAudio();
 			running = false;
-			notify();
-		}
 			
-		private void leaveGroup() 
-		{
-			try 
-			{
-				if(multicastSocket!=null)
-					multicastSocket.leaveGroup(CommSettings.getMulticastAddr());
-			}
-			catch(Exception e) 
-			{
-				Log.error(getClass(), e);
-			}
+			socket.close();
+			notify();			
 		}
 
 	}
