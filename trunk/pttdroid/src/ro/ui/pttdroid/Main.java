@@ -62,13 +62,21 @@ public class Main extends Activity
                       
         init();          
     }
-                    
+    
+    @Override
+    public void onPause()
+    {
+    	super.onPause();
+    	
+    	recorder.pauseAudio();
+    }
+                   
     @Override
     public void onDestroy() 
     {
-    	microphoneSwitcher.shutdown();
+    	super.onDestroy();
     	
-    	super.onDestroy();    	
+    	microphoneSwitcher.shutdown();    	    
     }
     
     @Override
@@ -154,6 +162,7 @@ public class Main extends Activity
     
     private void shutdown() 
     {    	  
+    	firstLaunch = true;    	
     	stopService(playerIntent);
     	recorder.shutdown();    		
         Speex.close();                   

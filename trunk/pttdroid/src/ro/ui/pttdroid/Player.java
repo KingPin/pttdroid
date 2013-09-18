@@ -33,18 +33,24 @@ import ro.ui.pttdroid.util.Log;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Binder;
 import android.os.IBinder;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 
 public class Player extends Service
 {
 	private PlayerThread 	playerThread;
 	
 	private IBinder playerBinder = new PlayerBinder();
+	
+	private TelephonyManager	telephonyManager;
+	private PhoneCallListener	phoneCallListener;
 	
 	public class PlayerBinder extends Binder 
 	{
@@ -56,9 +62,13 @@ public class Player extends Service
 	
 	@Override
     public void onCreate() 
-	{
+	{		 
 		playerThread = new PlayerThread();
-		playerThread.start();		
+		playerThread.start();
+		
+		telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		phoneCallListener = new PhoneCallListener();
+		telephonyManager.listen(phoneCallListener, PhoneStateListener.LISTEN_CALL_STATE);
 		
 		Notification notification = new Notification(R.drawable.notif_icon, 
 				getText(R.string.app_name),
@@ -86,6 +96,7 @@ public class Player extends Service
 	public void onDestroy() 
 	{
 		playerThread.shutdown();
+		telephonyManager.listen(phoneCallListener, PhoneStateListener.LISTEN_NONE);
 	}
 	
 	public int getProgress() 
@@ -97,8 +108,8 @@ public class Player extends Service
 	{
 		private AudioTrack 	player;
 		
-		private volatile boolean playing = true;	
 		private volatile boolean running = true;	
+		private volatile boolean playing = true;
 		
 		private DatagramSocket 	socket;		
 		private DatagramPacket 	packet;	
@@ -112,70 +123,57 @@ public class Player extends Service
 		{
 			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);				 
 			
-			init();
-			
-			while(isRunning()) 
-			{			
-				player.play();
+			while(isRunning())
+			{				
+				init();
 				
 				while(isPlaying()) 
-				{								
+				{							
 					try 
 					{				
 						socket.receive(packet);	
-												
-						if(AudioSettings.getEchoState()==AudioSettings.ECHO_OFF && IP.contains(packet.getAddress()))
-							continue;
-						
-						if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
-						{
-							Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
-							player.write(pcmFrame, 0, Audio.FRAME_SIZE);
-						}
-						else 
-						{			
-							player.write(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
-						}	
-						
-						progress.incrementAndGet();
 					}
-					catch(SocketException e) 
+					catch(SocketException e) //Due to socket.close() 
 					{
-						//Do nothing, the player is shutting down
+						break;
 					}
 					catch(IOException e) 
 					{
 						Log.error(getClass(), e);
-					}	
-				}		
-				
-				player.stop();
-			
-				try 
-				{	
-					synchronized(this) 
+					}					
+
+					if(AudioSettings.getEchoState()==AudioSettings.ECHO_OFF && IP.contains(packet.getAddress()))
+						continue;
+
+					if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
 					{
+						Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
+						player.write(pcmFrame, 0, Audio.FRAME_SIZE);
+					}
+					else 
+					{			
+						player.write(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
+					}	
+
+					progress.incrementAndGet();
+				}
+
+				player.stop();
+				player.release();
+				
+				synchronized(this)
+				{
+					try 
+					{	
 						if(isRunning())
-							wait();					
+							wait();
+					}
+					catch(InterruptedException e) 
+					{
+						Log.error(getClass(), e);
 					}
 				}
-				catch(InterruptedException e) 
-				{
-					//Do nothing, the player is shutting down
-				}
-			}
-
-			//
-			try
-			{
-				if(socket instanceof MulticastSocket)
-					((MulticastSocket) socket).leaveGroup(CommSettings.getMulticastAddr());
-			}
-			catch (IOException e) 
-			{
-				Log.error(getClass(), e);
 			}			
-			player.release();
 		}
 		
 		private void init() 
@@ -210,7 +208,9 @@ public class Player extends Service
 				else 
 					encodedFrame = new byte[Audio.FRAME_SIZE_IN_BYTES];
 				
-				packet = new DatagramPacket(encodedFrame, encodedFrame.length);							
+				packet = new DatagramPacket(encodedFrame, encodedFrame.length);
+				
+				player.play();
 			}
 			catch(IOException e) 
 			{
@@ -218,42 +218,64 @@ public class Player extends Service
 			}		
 		}
 		
-		public synchronized boolean isPlaying()
-		{
-			return playing;
-		}
-		
-		public synchronized boolean isRunning()
+		private synchronized boolean isRunning()
 		{
 			return running;
 		}
 			
+		private synchronized boolean isPlaying()
+		{
+			return playing;
+		}
+				
+		public synchronized void pauseAudio() 
+		{				
+			playing = false;
+			
+			try
+			{
+				if(socket instanceof MulticastSocket)
+					((MulticastSocket) socket).leaveGroup(CommSettings.getMulticastAddr());
+				socket.close();
+			}
+			catch (IOException e) 
+			{
+				Log.error(getClass(), e);
+			}					
+		}
+		
+		public synchronized void resumeAudio() 
+		{
+			playing = true;
+			notify();
+		}
+									
+		private synchronized void shutdown() 
+		{			
+			pauseAudio();
+			running = false;						
+			notify();
+		}
+		
 		public int getProgress() 
 		{
 			return progress.intValue();
 		}
-			
-		@SuppressWarnings("unused")
-		public synchronized void resumeAudio() 
-		{
-			playing = true;		
-			notify();
-		}
-			
-		public synchronized void pauseAudio() 
-		{
-			playing = false;				
-		}
-				
-		public synchronized void shutdown() 
-		{
-			pauseAudio();
-			running = false;
-			
-			socket.close();
-			notify();			
-		}
 
+	}
+	
+	private class PhoneCallListener extends PhoneStateListener
+	{
+		
+		@Override
+		public void onCallStateChanged (int state, String incomingNumber)
+		{
+			if(state==TelephonyManager.CALL_STATE_OFFHOOK)
+				playerThread.pauseAudio();
+			else if(state==TelephonyManager.CALL_STATE_IDLE)
+				playerThread.resumeAudio();
+		}
+		
 	}
 			
 }

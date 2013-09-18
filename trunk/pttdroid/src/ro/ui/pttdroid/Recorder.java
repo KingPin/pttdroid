@@ -48,7 +48,6 @@ public class Recorder extends Thread
 			
 	public void run() 
 	{
-		// Set audio specific thread priority
 		android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 		
 		init();
@@ -59,18 +58,18 @@ public class Recorder extends Thread
 			
 			while(isRecording()) 
 			{
+				if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
+				{
+					recorder.read(pcmFrame, 0, Audio.FRAME_SIZE);
+					Speex.encode(pcmFrame, encodedFrame);						
+				}
+				else
+				{
+					recorder.read(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
+				}
+
 				try 
-				{		
-					if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
-					{
-						recorder.read(pcmFrame, 0, Audio.FRAME_SIZE);
-						Speex.encode(pcmFrame, encodedFrame);						
-					}
-					else
-					{
-						recorder.read(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
-					}
-																		 
+				{																				 
 					socket.send(packet);
 				}
 				catch(IOException e) 
@@ -80,22 +79,21 @@ public class Recorder extends Thread
 			}		
 			
 			recorder.stop();
-					
-			try 
-			{	
-				synchronized(this)
-				{
+				
+			synchronized(this)
+			{
+				try 
+				{	
 					if(isRunning())
 						wait();
 				}
-			}
-			catch(InterruptedException e) 
-			{
-				//Do nothing, the recorder is shutting down
+				catch(InterruptedException e) 
+				{
+					Log.error(getClass(), e);
+				}
 			}
 		}		
 		
-		//
 		socket.close();				
 		recorder.release();
 	}
@@ -147,31 +145,31 @@ public class Recorder extends Thread
 		}	
 	}
 	
-	public synchronized boolean isRecording()
+	private synchronized boolean isRunning()
+	{
+		return running;
+	}
+	
+	private synchronized boolean isRecording()
 	{
 		return recording;
 	}
 	
-	public synchronized boolean isRunning()
-	{
-		return running;
-	}
-		
+	public synchronized void pauseAudio() 
+	{				
+		recording = false;					
+	}	 
+
 	public synchronized void resumeAudio() 
 	{				
 		recording = true;			
 		notify();
 	}
-		
-	public synchronized void pauseAudio() 
-	{				
-		recording = false;					
-	}	 
-			
+				
 	public synchronized void shutdown() 
 	{
 		pauseAudio();
-		running = false;		
+		running = false;				
 		notify();
 	}
 		
