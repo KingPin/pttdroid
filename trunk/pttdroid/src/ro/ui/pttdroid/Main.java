@@ -198,7 +198,7 @@ public class Main extends Activity
 		
 		private static final int	PROGRESS_CHECK_PERIOD = 100;
 		
-		private volatile boolean	running = false;
+		private volatile boolean	running = true;
 		
 		private ServiceConnection	playerServiceConnection;
 		
