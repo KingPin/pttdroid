@@ -47,7 +47,6 @@ public class Main extends Activity
 	
 	private static boolean firstLaunch = true;	
 			
-	private static volatile	Player	player;
 	private static Recorder 		recorder;	
 	
 	private MicrophoneSwitcher 	microphoneSwitcher;
@@ -64,21 +63,23 @@ public class Main extends Activity
     }
     
     @Override
+    public void onResume()
+    {
+    	super.onResume();
+    	
+		microphoneSwitcher = new MicrophoneSwitcher();
+		microphoneSwitcher.init();
+    }
+    
+    @Override
     public void onPause()
     {
     	super.onPause();
     	
     	recorder.pauseAudio();
+    	microphoneSwitcher.shutdown();
     }
-                   
-    @Override
-    public void onDestroy() 
-    {
-    	super.onDestroy();
-    	
-    	microphoneSwitcher.shutdown();    	    
-    }
-    
+                       
     @Override
     public boolean onCreateOptionsMenu(Menu menu) 
     {
@@ -154,10 +155,7 @@ public class Main extends Activity
     		recorder.start();     		    		
     		    		
     		firstLaunch = false;    		
-    	}
-    	
-		microphoneSwitcher = new MicrophoneSwitcher();
-		microphoneSwitcher.init();
+    	}    	
     }
     
     private void shutdown() 
@@ -168,22 +166,11 @@ public class Main extends Activity
         Speex.close();                   
         finish();
     }     
-    
-    private class PlayerServiceConnection implements ServiceConnection
-	{					
-		public void onServiceConnected(ComponentName arg0, IBinder arg1) 
-		{
-			player = ((PlayerBinder) arg1).getService();			
-		}
-		
-		public void onServiceDisconnected(ComponentName arg0) 
-		{					
-			player = null;		
-		}
-	};
 	
 	private class MicrophoneSwitcher implements Runnable, OnTouchListener 
 	{	
+		private Player		player;
+
 		private Handler 	handler = new Handler();
 
 		private ImageView 	microphoneImage;	
@@ -198,7 +185,7 @@ public class Main extends Activity
 		
 		private static final int	PROGRESS_CHECK_PERIOD = 100;
 		
-		private volatile boolean	running = true;
+		private Boolean	running = true;
 		
 		private ServiceConnection	playerServiceConnection;
 		
@@ -212,34 +199,36 @@ public class Main extends Activity
     		playerServiceConnection = new PlayerServiceConnection();
     		bindService(intent, playerServiceConnection, Context.BIND_AUTO_CREATE);
 
-	    	handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
+	    	handler.postDelayed(this, PROGRESS_CHECK_PERIOD);	    	
 		}
 	    
-		public synchronized void run() 
-		{					
-			if(running)
+		public void run() 
+		{		
+			synchronized(running)
 			{
-				int currentProgress = player.getProgress();
-
-				if(currentProgress > previousProgress) 
+				if(running && player!=null)
 				{
-					if(microphoneState!=MIC_STATE_DISABLED) 
+					int currentProgress = player.getProgress();
+
+					if(currentProgress > previousProgress) 
 					{
-						recorder.pauseAudio();
-						setMicrophoneState(MIC_STATE_DISABLED);							
-					}						 							
-				}
-				else 
-				{
-					if(microphoneState==MIC_STATE_DISABLED)
-						setMicrophoneState(MIC_STATE_NORMAL);
-				}
+						if(microphoneState!=MIC_STATE_DISABLED) 
+						{
+							recorder.pauseAudio();
+							setMicrophoneState(MIC_STATE_DISABLED);							
+						}						 							
+					}
+					else 
+					{
+						if(microphoneState==MIC_STATE_DISABLED)
+							setMicrophoneState(MIC_STATE_NORMAL);
+					}
 
-				previousProgress = currentProgress;
+					previousProgress = currentProgress;
 
-				handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
-			}
-				
+					handler.postDelayed(this, PROGRESS_CHECK_PERIOD);
+				}
+			}	
 		}
 		
 		public boolean onTouch(View v, MotionEvent e) 
@@ -259,6 +248,7 @@ public class Main extends Activity
 	    	}
 	    	return true;
 	    }
+		
 		public void setMicrophoneState(int state) 
 	    {
 	    	switch(state) {
@@ -277,12 +267,34 @@ public class Main extends Activity
 	    	}
 	    }
 	    
-		public synchronized void shutdown()
+		public void shutdown()
 		{
-			unbindService(playerServiceConnection);
-			handler.removeCallbacks(microphoneSwitcher);			
-			running = false;
+			synchronized(running) 
+			{
+				unbindService(playerServiceConnection);
+				handler.removeCallbacks(microphoneSwitcher);			
+				running = false;
+			}
 		}
+		
+		private class PlayerServiceConnection implements ServiceConnection
+		{					
+			public void onServiceConnected(ComponentName arg0, IBinder arg1) 
+			{
+				synchronized(running) 
+				{
+					player = ((PlayerBinder) arg1).getService();
+				}						
+			}
+			
+			public void onServiceDisconnected(ComponentName arg0) 
+			{					
+				synchronized(running) 
+				{
+					player = null;
+				}						
+			}
+		};
 		
 	};
         
