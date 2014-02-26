@@ -41,10 +41,10 @@ public class AudioSettings extends PreferenceActivity
 	public static final boolean DONT_USE_SPEEX = false;	
 	public static final boolean ECHO_ON = true;
 	public static final boolean ECHO_OFF = false;	
-	
-	@Override
+		
 	@SuppressWarnings("deprecation")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	@Override
 	public void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);

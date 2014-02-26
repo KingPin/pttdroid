@@ -46,10 +46,10 @@ public class CommSettings extends PreferenceActivity
 		
 	private static int castType;	
 	private static int port;	
-	
-	@Override
+		
 	@SuppressWarnings("deprecation")
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+	@Override
 	public void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
