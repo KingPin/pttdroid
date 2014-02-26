@@ -22,11 +22,14 @@ import java.net.UnknownHostException;
 
 import ro.ui.pttdroid.R;
 import ro.ui.pttdroid.util.Log;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
 
@@ -45,10 +48,26 @@ public class CommSettings extends PreferenceActivity
 	private static int port;	
 	
 	@Override
+	@SuppressWarnings("deprecation")
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.settings_comm);		
+		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)			
+			addPreferencesFromResource(R.xml.settings_comm);
+		else
+			getFragmentManager().beginTransaction().replace(
+					R.xml.settings_comm, 
+					new PreferenceFragment() {
+						
+						@Override
+				        public void onCreate(final Bundle savedInstanceState)
+				        {
+				            super.onCreate(savedInstanceState);
+				            addPreferencesFromResource(R.xml.settings_audio);
+				        }
+					}
+					).commit();		
 	}		
 	
 	/**

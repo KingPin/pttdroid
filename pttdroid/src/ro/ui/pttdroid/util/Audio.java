@@ -35,14 +35,14 @@ public abstract class Audio
 			SAMPLE_RATE, 
 			ceil(AudioRecord.getMinBufferSize(
 					SAMPLE_RATE, 
-					AudioFormat.CHANNEL_CONFIGURATION_MONO, 
+					AudioFormat.CHANNEL_IN_MONO, 
 					ENCODING_PCM_NUM_BITS)));
 	
 	public static final int TRACK_BUFFER_SIZE = Math.max(
 			FRAME_SIZE, 
 			ceil(AudioTrack.getMinBufferSize(
 					SAMPLE_RATE, 
-					AudioFormat.CHANNEL_CONFIGURATION_MONO, 
+					AudioFormat.CHANNEL_OUT_MONO, 
 					ENCODING_PCM_NUM_BITS)));			
 	
 	/**

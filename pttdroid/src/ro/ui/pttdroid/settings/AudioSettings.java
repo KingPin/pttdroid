@@ -18,11 +18,14 @@ along with pttdroid.  If not, see <http://www.gnu.org/licenses/>. */
 package ro.ui.pttdroid.settings;
 
 import ro.ui.pttdroid.R;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
 
@@ -40,10 +43,27 @@ public class AudioSettings extends PreferenceActivity
 	public static final boolean ECHO_OFF = false;	
 	
 	@Override
+	@SuppressWarnings("deprecation")
+	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
-		addPreferencesFromResource(R.xml.settings_audio);		
+	
+		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)			
+			addPreferencesFromResource(R.xml.settings_audio);
+		else
+			getFragmentManager().beginTransaction().replace(
+					R.xml.settings_audio, 
+					new PreferenceFragment() {
+						
+						@Override
+				        public void onCreate(final Bundle savedInstanceState)
+				        {
+				            super.onCreate(savedInstanceState);
+				            addPreferencesFromResource(R.xml.settings_audio);
+				        }
+					}
+					).commit();
 	}	
 	
 	/**
