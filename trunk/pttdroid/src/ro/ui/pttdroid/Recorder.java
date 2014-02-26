@@ -135,7 +135,7 @@ public class Recorder extends Thread
 	    	recorder = new AudioRecord(
 	    			AudioSource.MIC, 
 	    			Audio.SAMPLE_RATE, 
-	    			AudioFormat.CHANNEL_CONFIGURATION_MONO, 
+	    			AudioFormat.CHANNEL_IN_MONO, 
 	    			Audio.ENCODING_PCM_NUM_BITS, 
 	    			Audio.RECORD_BUFFER_SIZE);							
 		}

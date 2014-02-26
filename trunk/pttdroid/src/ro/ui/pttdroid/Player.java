@@ -30,8 +30,6 @@ import ro.ui.pttdroid.settings.CommSettings;
 import ro.ui.pttdroid.util.Audio;
 import ro.ui.pttdroid.util.IP;
 import ro.ui.pttdroid.util.Log;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -70,14 +68,20 @@ public class Player extends Service
 		phoneCallListener = new PhoneCallListener();
 		telephonyManager.listen(phoneCallListener, PhoneStateListener.LISTEN_CALL_STATE);
 		
-		Notification notification = new Notification(R.drawable.notif_icon, 
-				getText(R.string.app_name),
-		        System.currentTimeMillis());
-		Intent notificationIntent = new Intent(this, Main.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		notification.setLatestEventInfo(this, getText(R.string.app_name),
-		        getText(R.string.app_running), pendingIntent);
-		startForeground(1, notification);
+//		Notification notification = new Notification(R.drawable.notif_icon, 
+//				getText(R.string.app_name),
+//		        System.currentTimeMillis());
+//		Intent notificationIntent = new Intent(this, Main.class);
+//		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+//		notification.setLatestEventInfo(this, getText(R.string.app_name),
+//		        getText(R.string.app_running), pendingIntent);
+//		startForeground(1, notification);
+		
+//		Notification notification = new Notification.Builder(null)
+//			.setContentTitle(getText(R.string.app_name))
+//	        .setContentText(getText(R.string.app_name))
+//	        .setSmallIcon(R.drawable.notif_icon)	              
+//	        .build();
     }
 	
 	@Override
@@ -183,7 +187,7 @@ public class Player extends Service
 				player = new AudioTrack(
 						AudioManager.STREAM_MUSIC, 
 						Audio.SAMPLE_RATE, 
-						AudioFormat.CHANNEL_CONFIGURATION_MONO, 
+						AudioFormat.CHANNEL_OUT_MONO, 
 						Audio.ENCODING_PCM_NUM_BITS, 
 						Audio.TRACK_BUFFER_SIZE, 
 						AudioTrack.MODE_STREAM);	
