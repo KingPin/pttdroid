@@ -25,7 +25,6 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
 
@@ -49,21 +48,21 @@ public class AudioSettings extends PreferenceActivity
 	{
 		super.onCreate(savedInstanceState);
 	
-		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)			
+//		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)			
 			addPreferencesFromResource(R.xml.settings_audio);
-		else
-			getFragmentManager().beginTransaction().replace(
-					R.xml.settings_audio, 
-					new PreferenceFragment() {
-						
-						@Override
-				        public void onCreate(final Bundle savedInstanceState)
-				        {
-				            super.onCreate(savedInstanceState);
-				            addPreferencesFromResource(R.xml.settings_audio);
-				        }
-					}
-					).commit();
+//		else
+//			getFragmentManager().beginTransaction().replace(
+//					R.xml.settings_audio, 
+//					new PreferenceFragment() {
+//						
+//						@Override
+//				        public void onCreate(Bundle savedInstanceState)
+//				        {
+//				            super.onCreate(savedInstanceState);
+//				            addPreferencesFromResource(R.xml.settings_audio);
+//				        }
+//					}
+//					).commit();
 	}	
 	
 	/**
