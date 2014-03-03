@@ -2,7 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:id="@+id/settings"
 		android:icon="@drawable/settings_icon"
-		android:title="@string/settings_label">		
+		android:title="@string/settings_label"
+		android:showAsAction="always">		
 		<menu>
 			<item android:id="@+id/settings_comm"
 				android:title="@string/settings_comm_label" />			
@@ -14,6 +15,7 @@
 	</item>
 	<item android:id="@+id/quit"
 		android:icon="@drawable/quit_icon"
-		android:title="@string/quit_label">
+		android:title="@string/quit_label"
+		android:showAsAction="always">
 	</item>
 </menu>

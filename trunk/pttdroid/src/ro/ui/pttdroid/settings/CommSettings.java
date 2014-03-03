@@ -22,11 +22,9 @@ import java.net.UnknownHostException;
 
 import ro.ui.pttdroid.R;
 import ro.ui.pttdroid.util.Log;
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
@@ -47,7 +45,7 @@ public class CommSettings extends PreferenceActivity
 	private static int port;	
 		
 	@SuppressWarnings("deprecation")
-	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
+//	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public void onCreate(Bundle savedInstanceState) 
 	{
