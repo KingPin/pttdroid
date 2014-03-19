@@ -40,7 +40,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+
 
 public class Main extends Activity
 {
@@ -57,9 +63,11 @@ public class Main extends Activity
     public void onCreate(Bundle savedInstanceState) 
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);        
-                      
-        init();          
+        setContentView(R.layout.main);
+        
+        loadAdd();
+        
+        init();                     
     }
     
     @Override
@@ -135,6 +143,19 @@ public class Main extends Activity
     {
     	CommSettings.getSettings(this);     	    	
     	AudioSettings.getSettings(this);    	
+    }
+    
+    private void loadAdd()
+    {
+    	AdView adView = new AdView(this);
+        adView.setAdSize(AdSize.SMART_BANNER);
+        adView.setAdUnitId("ca-app-pub-6851847793835278/8478747144");
+        
+        LinearLayout layout = (LinearLayout) findViewById(R.id.linearLayout);
+        layout.addView(adView);
+        
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
+        adView.loadAd(adRequest);
     }
     
     private void init() 

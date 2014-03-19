@@ -2,6 +2,8 @@
 <resources>    
     <string name="app_name">pttdroid</string>
     <string name="app_running">pttdroid is running</string>
+    
+    <string name="ptt">Push To Talk</string>
 
     <string name="settings_name">pttdroid Settings</string>
     <string name="settings_label">Settings</string>
