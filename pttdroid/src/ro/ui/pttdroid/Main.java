@@ -65,7 +65,7 @@ public class Main extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        loadAdd();
+        loadAd();
         
         init();                     
     }
@@ -145,7 +145,7 @@ public class Main extends Activity
     	AudioSettings.getSettings(this);    	
     }
     
-    private void loadAdd()
+    private void loadAd()
     {
     	AdView adView = new AdView(this);
         adView.setAdSize(AdSize.SMART_BANNER);
