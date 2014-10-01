@@ -15,12 +15,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with pttdroid.  If not, see <http://www.gnu.org/licenses/>. */
 
-package ro.ui.pttdroid.settings;
+package ro.ui.pttdroid;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import ro.ui.pttdroid.R;
 import ro.ui.pttdroid.util.Log;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -29,8 +28,7 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
-
-public class CommSettings extends PreferenceActivity 
+public class Settings extends PreferenceActivity 
 {
 	
 	private static InetAddress broadcastAddr;
@@ -42,36 +40,31 @@ public class CommSettings extends PreferenceActivity
 	public static final int UNICAST = 2;
 		
 	private static int castType;	
-	private static int port;	
+	private static int port;
+	
+	private static boolean useSpeex;
+	private static int speexQuality;
+	private static boolean echoState;
+
+	public static final boolean USE_SPEEX = true;
+	public static final boolean DONT_USE_SPEEX = false;	
+	public static final boolean ECHO_ON = true;
+	public static final boolean ECHO_OFF = false;	
 		
 	@SuppressWarnings("deprecation")
-//	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	@Override
 	public void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
-//		if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)			
-			addPreferencesFromResource(R.xml.settings_comm);
-//		else
-//			getFragmentManager().beginTransaction().replace(
-//					R.xml.settings_comm, 
-//					new PreferenceFragment() {
-//						
-//						@Override
-//				        public void onCreate(Bundle savedInstanceState)
-//				        {
-//				            super.onCreate(savedInstanceState);
-//				            addPreferencesFromResource(R.xml.settings_comm);
-//				        }
-//					}
-//					).commit();		
+		
+		addPreferencesFromResource(R.xml.settings);
 	}		
 	
 	/**
-	 * Update cache settings
+	 * Build cache settings
 	 * @param context
 	 */
-	public static void getSettings(Context context)
+	public static void buildCache(Context context)
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		Resources res = context.getResources();
@@ -93,10 +86,20 @@ public class CommSettings extends PreferenceActivity
     		port = Integer.parseInt(prefs.getString(
     				"port", 
     				res.getString(R.string.port_default)));
+    		    		
+        	useSpeex = prefs.getBoolean(
+        			"use_speex",
+        			USE_SPEEX);    		    		
+        	speexQuality = Integer.parseInt(prefs.getString(
+        			"speex_quality", 
+        			res.getStringArray(R.array.speex_quality_values)[0]));
+        	echoState = prefs.getBoolean(
+        			"echo",
+        			ECHO_OFF);    		    		
 		}
 		catch(UnknownHostException e) 
 		{
-			Log.error(CommSettings.class, e);
+			Log.error(Settings.class, e);
 		}
 	}
 	
@@ -123,6 +126,21 @@ public class CommSettings extends PreferenceActivity
 	public static int getPort() 
 	{
 		return port;
+	}		
+
+	public static boolean useSpeex() 
+	{
+		return useSpeex;
+	}	
+
+	public static int getSpeexQuality() 
+	{
+		return speexQuality;
+	}
+	
+	public static boolean getEchoState() 
+	{
+		return echoState;
 	}		
 
 }

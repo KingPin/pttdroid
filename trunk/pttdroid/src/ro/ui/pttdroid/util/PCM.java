@@ -22,7 +22,7 @@ import android.media.AudioRecord;
 import android.media.AudioTrack;
 
 
-public abstract class Audio 
+public abstract class PCM 
 {
 	
 	public static final int SAMPLE_RATE = 8000;
