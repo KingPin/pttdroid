@@ -4,11 +4,9 @@
     <string name="app_running">pttdroid is running</string>
     
     <string name="ptt">Push To Talk</string>
-
-    <string name="settings_name">pttdroid Settings</string>
+    
     <string name="settings_label">Settings</string>
     
-    <string name="settings_comm_name">Communication settings</string>
     <string name="settings_comm_label">Communication</string>
     
     	<string name="set_cast_and_port">Cast &amp; port</string>
@@ -34,8 +32,7 @@
     		<string name="unicast_addr_title">Unicast address</string>
     		<string name="unicast_addr_summary">Audio data will be received only by one device, designated by the given address.</string>
     		<string name="unicast_addr_default">192.168.0.1</string>    		
-    		    	
-    <string name="settings_audio_name">Audio settings</string>
+    		    	    
     <string name="settings_audio_label">Audio</string>
     	
 		<string name="use_speex_title">Use codec</string>
@@ -49,9 +46,9 @@
 		<string name="echo_on">Turn off</string>		
 		<string name="echo_off">Turn on</string>
 		
-    <string name="settings_reset_all_name">Reset All</string>
-    <string name="settings_reset_all_label">Reset All</string>
-    	<string name="setting_reset_all_confirm">All settings were restored to their default values</string>
+    <string name="settings_reset_name">Reset</string>
+    <string name="settings_reset_label">Reset</string>
+    	<string name="setting_reset_confirm">Settings were restored to their default values</string>
     	
     <string name="quit_label">Quit</string>			
 	    		

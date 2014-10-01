@@ -20,14 +20,14 @@ package ro.ui.pttdroid.util;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.LinkedList;
 
 
 public class IP 
 {
 	
-	static private LinkedList<InetAddress> addresses = new LinkedList<InetAddress>(); 
+	static private ArrayList<InetAddress> addresses = new ArrayList<InetAddress>(); 
 
 	/**
 	 * 

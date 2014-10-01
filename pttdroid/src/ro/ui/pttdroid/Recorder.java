@@ -24,11 +24,9 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 import ro.ui.pttdroid.codecs.Speex;
-import ro.ui.pttdroid.settings.AudioSettings;
-import ro.ui.pttdroid.settings.CommSettings;
-import ro.ui.pttdroid.util.Audio;
 import ro.ui.pttdroid.util.IP;
 import ro.ui.pttdroid.util.Log;
+import ro.ui.pttdroid.util.PCM;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
@@ -43,7 +41,7 @@ public class Recorder extends Thread
 	private DatagramSocket socket;
 	private DatagramPacket packet;
 	
-	private short[] pcmFrame = new short[Audio.FRAME_SIZE];
+	private short[] pcmFrame = new short[PCM.FRAME_SIZE];
 	private byte[] encodedFrame;
 			
 	public void run() 
@@ -58,14 +56,14 @@ public class Recorder extends Thread
 			
 			while(isRecording()) 
 			{
-				if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX) 
+				if(Settings.useSpeex()==Settings.USE_SPEEX) 
 				{
-					recorder.read(pcmFrame, 0, Audio.FRAME_SIZE);
+					recorder.read(pcmFrame, 0, PCM.FRAME_SIZE);
 					Speex.encode(pcmFrame, encodedFrame);						
 				}
 				else
 				{
-					recorder.read(encodedFrame, 0, Audio.FRAME_SIZE_IN_BYTES);
+					recorder.read(encodedFrame, 0, PCM.FRAME_SIZE_IN_BYTES);
 				}
 
 				try 
@@ -107,37 +105,37 @@ public class Recorder extends Thread
 			socket = new DatagramSocket();			
 			InetAddress addr = null;
 			
-			switch(CommSettings.getCastType()) 
+			switch(Settings.getCastType()) 
 			{
-				case CommSettings.BROADCAST:
+				case Settings.BROADCAST:
 					socket.setBroadcast(true);		
-					addr = CommSettings.getBroadcastAddr();
+					addr = Settings.getBroadcastAddr();
 				break;
-				case CommSettings.MULTICAST:
-					addr = CommSettings.getMulticastAddr();					
+				case Settings.MULTICAST:
+					addr = Settings.getMulticastAddr();					
 				break;
-				case CommSettings.UNICAST:
-					addr = CommSettings.getUnicastAddr();					
+				case Settings.UNICAST:
+					addr = Settings.getUnicastAddr();					
 				break;
 			}							
 			
-			if(AudioSettings.useSpeex()==AudioSettings.USE_SPEEX)
-				encodedFrame = new byte[Speex.getEncodedSize(AudioSettings.getSpeexQuality())];
+			if(Settings.useSpeex()==Settings.USE_SPEEX)
+				encodedFrame = new byte[Speex.getEncodedSize(Settings.getSpeexQuality())];
 			else 
-				encodedFrame = new byte[Audio.FRAME_SIZE_IN_BYTES];
+				encodedFrame = new byte[PCM.FRAME_SIZE_IN_BYTES];
 			
 			packet = new DatagramPacket(
 					encodedFrame, 
 					encodedFrame.length, 
 					addr, 
-					CommSettings.getPort());
+					Settings.getPort());
 
 	    	recorder = new AudioRecord(
 	    			AudioSource.MIC, 
-	    			Audio.SAMPLE_RATE, 
+	    			PCM.SAMPLE_RATE, 
 	    			AudioFormat.CHANNEL_IN_MONO, 
-	    			Audio.ENCODING_PCM_NUM_BITS, 
-	    			Audio.RECORD_BUFFER_SIZE);							
+	    			PCM.ENCODING_PCM_NUM_BITS, 
+	    			PCM.RECORD_BUFFER_SIZE);							
 		}
 		catch(SocketException e) 
 		{

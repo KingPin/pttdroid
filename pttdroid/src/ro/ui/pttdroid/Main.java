@@ -19,8 +19,7 @@ package ro.ui.pttdroid;
 
 import ro.ui.pttdroid.Player.PlayerBinder;
 import ro.ui.pttdroid.codecs.Speex;
-import ro.ui.pttdroid.settings.AudioSettings;
-import ro.ui.pttdroid.settings.CommSettings;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -40,12 +39,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
-
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.AdView;
 
 
 public class Main extends Activity
@@ -64,8 +58,6 @@ public class Main extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
-        loadAd();
         
         init();                     
     }
@@ -105,25 +97,25 @@ public class Main extends Activity
     		shutdown();
     		return true;
     	case R.id.settings_comm:
-    		i = new Intent(this, CommSettings.class);
+    		i = new Intent(this, Settings.class);
     		startActivityForResult(i, 0);    		
     		return true;
     	case R.id.settings_audio:
-    		i = new Intent(this, AudioSettings.class);
+    		i = new Intent(this, Settings.class);
     		startActivityForResult(i, 0);    		
     		return true;    
-    	case R.id.settings_reset_all:
-    		return resetAllSettings();    		
+    	case R.id.settings_reset:
+    		return resetSettings();    		
     	default:
     		return super.onOptionsItemSelected(item);
     	}
     }
     
     /**
-     * Reset all settings to their default value
+     * Reset settings to their default value
      * @return
      */
-    private boolean resetAllSettings() 
+    private boolean resetSettings() 
     {
     	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
     	
@@ -131,7 +123,7 @@ public class Main extends Activity
     	editor.clear();
     	editor.commit();   
     	
-    	Toast toast = Toast.makeText(this, getString(R.string.setting_reset_all_confirm), Toast.LENGTH_SHORT);    	
+    	Toast toast = Toast.makeText(this, getString(R.string.setting_reset_confirm), Toast.LENGTH_SHORT);    	
     	toast.setGravity(Gravity.CENTER, 0, 0);
     	toast.show();
 
@@ -141,33 +133,18 @@ public class Main extends Activity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) 
     {
-    	CommSettings.getSettings(this);     	    	
-    	AudioSettings.getSettings(this);    	
+    	Settings.buildCache(this);    	
     }
-    
-    private void loadAd()
-    {
-    	AdView adView = new AdView(this);
-        adView.setAdSize(AdSize.SMART_BANNER);
-        adView.setAdUnitId("ca-app-pub-6851847793835278/8478747144");
         
-        LinearLayout layout = (LinearLayout) findViewById(R.id.linearLayout);
-        layout.addView(adView);
-        
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
-        adView.loadAd(adRequest);
-    }
-    
     private void init() 
     {    	    	    	
     	if(firstLaunch) 
     	{    		
-    		CommSettings.getSettings(this);
-    		AudioSettings.getSettings(this);
+    		Settings.buildCache(this);    		
     		 
         	setVolumeControlStream(AudioManager.STREAM_MUSIC);
     		
-    		Speex.open(AudioSettings.getSpeexQuality());
+    		Speex.open(Settings.getSpeexQuality());
     		    	    	 
     		playerIntent = new Intent(this, Player.class);            
             startService(playerIntent);                		
@@ -252,6 +229,7 @@ public class Main extends Activity
 			}	
 		}
 		
+		@SuppressLint("ClickableViewAccessibility")
 		public boolean onTouch(View v, MotionEvent e) 
 	    {
 	    	if(microphoneState!=MicrophoneSwitcher.MIC_STATE_DISABLED) 
