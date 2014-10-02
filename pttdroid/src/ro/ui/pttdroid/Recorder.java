@@ -24,9 +24,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 import ro.ui.pttdroid.codecs.Speex;
-import ro.ui.pttdroid.util.IP;
-import ro.ui.pttdroid.util.Log;
-import ro.ui.pttdroid.util.PCM;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
@@ -41,7 +38,7 @@ public class Recorder extends Thread
 	private DatagramSocket socket;
 	private DatagramPacket packet;
 	
-	private short[] pcmFrame = new short[PCM.FRAME_SIZE];
+	private short[] pcmFrame = new short[Utils.FRAME_SIZE];
 	private byte[] encodedFrame;
 			
 	public void run() 
@@ -58,12 +55,12 @@ public class Recorder extends Thread
 			{
 				if(Settings.useSpeex()==Settings.USE_SPEEX) 
 				{
-					recorder.read(pcmFrame, 0, PCM.FRAME_SIZE);
+					recorder.read(pcmFrame, 0, Utils.FRAME_SIZE);
 					Speex.encode(pcmFrame, encodedFrame);						
 				}
 				else
 				{
-					recorder.read(encodedFrame, 0, PCM.FRAME_SIZE_IN_BYTES);
+					recorder.read(encodedFrame, 0, Utils.FRAME_SIZE_IN_BYTES);
 				}
 
 				try 
@@ -72,7 +69,7 @@ public class Recorder extends Thread
 				}
 				catch(IOException e) 
 				{
-					Log.error(getClass(), e);
+					Utils.log(getClass(), e);
 				}	
 			}		
 			
@@ -87,7 +84,7 @@ public class Recorder extends Thread
 				}
 				catch(InterruptedException e) 
 				{
-					Log.error(getClass(), e);
+					Utils.log(getClass(), e);
 				}
 			}
 		}		
@@ -100,7 +97,7 @@ public class Recorder extends Thread
 	{				
 		try 
 		{	    	
-			IP.load();
+			Utils.loadNetworkInterfaces();
 			
 			socket = new DatagramSocket();			
 			InetAddress addr = null;
@@ -122,7 +119,7 @@ public class Recorder extends Thread
 			if(Settings.useSpeex()==Settings.USE_SPEEX)
 				encodedFrame = new byte[Speex.getEncodedSize(Settings.getSpeexQuality())];
 			else 
-				encodedFrame = new byte[PCM.FRAME_SIZE_IN_BYTES];
+				encodedFrame = new byte[Utils.FRAME_SIZE_IN_BYTES];
 			
 			packet = new DatagramPacket(
 					encodedFrame, 
@@ -132,14 +129,14 @@ public class Recorder extends Thread
 
 	    	recorder = new AudioRecord(
 	    			AudioSource.MIC, 
-	    			PCM.SAMPLE_RATE, 
+	    			Utils.SAMPLE_RATE, 
 	    			AudioFormat.CHANNEL_IN_MONO, 
-	    			PCM.ENCODING_PCM_NUM_BITS, 
-	    			PCM.RECORD_BUFFER_SIZE);							
+	    			Utils.ENCODING_PCM_NUM_BITS, 
+	    			Utils.RECORD_BUFFER_SIZE);							
 		}
 		catch(SocketException e) 
 		{
-			Log.error(getClass(), e);
+			Utils.log(getClass(), e);
 		}	
 	}
 	

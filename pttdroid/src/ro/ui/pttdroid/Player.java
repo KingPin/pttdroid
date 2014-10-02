@@ -25,9 +25,6 @@ import java.net.SocketException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ro.ui.pttdroid.codecs.Speex;
-import ro.ui.pttdroid.util.IP;
-import ro.ui.pttdroid.util.Log;
-import ro.ui.pttdroid.util.PCM;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -113,7 +110,7 @@ public class Player extends Service
 		private DatagramSocket 	socket;		
 		private DatagramPacket 	packet;	
 		
-		private short[] pcmFrame = new short[PCM.FRAME_SIZE];
+		private short[] pcmFrame = new short[Utils.FRAME_SIZE];
 		private byte[] 	encodedFrame;
 		
 		private AtomicInteger progress = new AtomicInteger(0);
@@ -138,20 +135,21 @@ public class Player extends Service
 					}
 					catch(IOException e) 
 					{
-						Log.error(getClass(), e);
+						Utils.log(getClass(), e);
 					}					
 
-					if(Settings.getEchoState()==Settings.ECHO_OFF && IP.contains(packet.getAddress()))
+					if(Settings.getEchoState()==Settings.ECHO_OFF && 
+							Utils.existsNetworkInterface(packet.getAddress()))
 						continue;
 
 					if(Settings.useSpeex()==Settings.USE_SPEEX) 
 					{
 						Speex.decode(encodedFrame, encodedFrame.length, pcmFrame);
-						player.write(pcmFrame, 0, PCM.FRAME_SIZE);
+						player.write(pcmFrame, 0, Utils.FRAME_SIZE);
 					}
 					else 
 					{			
-						player.write(encodedFrame, 0, PCM.FRAME_SIZE_IN_BYTES);
+						player.write(encodedFrame, 0, Utils.FRAME_SIZE_IN_BYTES);
 					}	
 
 					progress.incrementAndGet();
@@ -169,7 +167,7 @@ public class Player extends Service
 					}
 					catch(InterruptedException e) 
 					{
-						Log.error(getClass(), e);
+						Utils.log(getClass(), e);
 					}
 				}
 			}			
@@ -181,10 +179,10 @@ public class Player extends Service
 			{						
 				player = new AudioTrack(
 						AudioManager.STREAM_MUSIC, 
-						PCM.SAMPLE_RATE, 
+						Utils.SAMPLE_RATE, 
 						AudioFormat.CHANNEL_OUT_MONO, 
-						PCM.ENCODING_PCM_NUM_BITS, 
-						PCM.TRACK_BUFFER_SIZE, 
+						Utils.ENCODING_PCM_NUM_BITS, 
+						Utils.TRACK_BUFFER_SIZE, 
 						AudioTrack.MODE_STREAM);	
 
 				switch(Settings.getCastType()) 
@@ -205,7 +203,7 @@ public class Player extends Service
 				if(Settings.useSpeex()==Settings.USE_SPEEX) 
 					encodedFrame = new byte[Speex.getEncodedSize(Settings.getSpeexQuality())];
 				else 
-					encodedFrame = new byte[PCM.FRAME_SIZE_IN_BYTES];
+					encodedFrame = new byte[Utils.FRAME_SIZE_IN_BYTES];
 				
 				packet = new DatagramPacket(encodedFrame, encodedFrame.length);
 				
@@ -213,7 +211,7 @@ public class Player extends Service
 			}
 			catch(IOException e) 
 			{
-				Log.error(getClass(), e);
+				Utils.log(getClass(), e);
 			}		
 		}
 		
@@ -239,7 +237,7 @@ public class Player extends Service
 			}
 			catch (IOException e) 
 			{
-				Log.error(getClass(), e);
+				Utils.log(getClass(), e);
 			}					
 		}
 		
