@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="@string/settings_label">
     
     <PreferenceScreen 
         android:title="@string/settings_comm_label">
@@ -73,6 +74,6 @@
 			android:summaryOn="@string/echo_on"
 			android:summaryOff="@string/echo_off" />
 		        
-    </PreferenceScreen>
-    			
+    </PreferenceScreen>	
+        			
 </PreferenceScreen>
