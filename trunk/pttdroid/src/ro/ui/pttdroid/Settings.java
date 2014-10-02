@@ -20,7 +20,6 @@ package ro.ui.pttdroid;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import ro.ui.pttdroid.util.Log;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -99,7 +98,7 @@ public class Settings extends PreferenceActivity
 		}
 		catch(UnknownHostException e) 
 		{
-			Log.error(Settings.class, e);
+			Utils.log(Settings.class, e);
 		}
 	}
 	
@@ -141,6 +140,6 @@ public class Settings extends PreferenceActivity
 	public static boolean getEchoState() 
 	{
 		return echoState;
-	}		
+	}
 
 }

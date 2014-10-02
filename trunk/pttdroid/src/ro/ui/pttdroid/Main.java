@@ -21,8 +21,11 @@ import ro.ui.pttdroid.Player.PlayerBinder;
 import ro.ui.pttdroid.codecs.Speex;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -32,15 +35,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
-import android.widget.Toast;
-
 
 public class Main extends Activity
 {
@@ -93,19 +93,15 @@ public class Main extends Activity
     	Intent i; 
     	
     	switch(item.getItemId()) {
+    	case R.id.settings:
+    		i = new Intent(this, Settings.class);
+    		startActivityForResult(i, 0);    		
+    		return true;
+    	case R.id.reset:
+    		return resetSettings();    		
     	case R.id.quit:
     		shutdown();
-    		return true;
-    	case R.id.settings_comm:
-    		i = new Intent(this, Settings.class);
-    		startActivityForResult(i, 0);    		
-    		return true;
-    	case R.id.settings_audio:
-    		i = new Intent(this, Settings.class);
-    		startActivityForResult(i, 0);    		
-    		return true;    
-    	case R.id.settings_reset:
-    		return resetSettings();    		
+    		return true;    		
     	default:
     		return super.onOptionsItemSelected(item);
     	}
@@ -117,16 +113,22 @@ public class Main extends Activity
      */
     private boolean resetSettings() 
     {
-    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    	new AlertDialog.Builder(this)
+    		.setTitle(R.string.reset_label)
+    		.setMessage(R.string.reset_confirm)
+    		.setPositiveButton(android.R.string.yes, new OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) 
+				{
+			    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Main.this);
+			    	
+			    	Editor editor = prefs.edit();
+			    	editor.clear();
+			    	editor.commit();   			    						
+				}
+			})
+    		.show();
     	
-    	Editor editor = prefs.edit();
-    	editor.clear();
-    	editor.commit();   
-    	
-    	Toast toast = Toast.makeText(this, getString(R.string.setting_reset_confirm), Toast.LENGTH_SHORT);    	
-    	toast.setGravity(Gravity.CENTER, 0, 0);
-    	toast.show();
-
     	return true;
     }
     
