@@ -27,17 +27,11 @@
         </activity>
         
         <activity 
-            android:name=".settings.CommSettings" 
+            android:name=".Settings" 
             android:label="@string/settings_comm_label"> 
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen">        	
         </activity>
 
-        <activity 
-            android:name=".settings.AudioSettings" 
-            android:label="@string/settings_audio_label">
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">        	
-        </activity>
-        
         <service android:name=".Player"></service>
         
 	</application>    
