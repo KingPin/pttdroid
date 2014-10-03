@@ -20,21 +20,15 @@ package ro.ui.pttdroid;
 import ro.ui.pttdroid.Player.PlayerBinder;
 import ro.ui.pttdroid.codecs.Speex;
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -42,7 +36,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 
-public class Main extends Activity
+public class Main extends ActionBarActivity
 {
 	
 	private static boolean firstLaunch = true;	
@@ -97,8 +91,6 @@ public class Main extends Activity
     		i = new Intent(this, Settings.class);
     		startActivityForResult(i, 0);    		
     		return true;
-    	case R.id.reset:
-    		return resetSettings();    		
     	case R.id.quit:
     		shutdown();
     		return true;    		
@@ -107,30 +99,7 @@ public class Main extends Activity
     	}
     }
     
-    /**
-     * Reset settings to their default value
-     * @return
-     */
-    private boolean resetSettings() 
-    {
-    	new AlertDialog.Builder(this)
-    		.setTitle(R.string.reset_label)
-    		.setMessage(R.string.reset_confirm)
-    		.setPositiveButton(android.R.string.yes, new OnClickListener() {
-				
-				public void onClick(DialogInterface dialog, int which) 
-				{
-			    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(Main.this);
-			    	
-			    	Editor editor = prefs.edit();
-			    	editor.clear();
-			    	editor.commit();   			    						
-				}
-			})
-    		.show();
-    	
-    	return true;
-    }
+
     
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) 

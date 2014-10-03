@@ -74,6 +74,9 @@
 			android:summaryOn="@string/echo_on"
 			android:summaryOff="@string/echo_off" />
 		        
-    </PreferenceScreen>	
+    </PreferenceScreen>
+    
+    <Preference android:key="reset"
+        		android:title="@string/reset_label" />	
         			
 </PreferenceScreen>
