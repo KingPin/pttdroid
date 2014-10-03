@@ -20,10 +20,16 @@ package ro.ui.pttdroid;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 
@@ -57,7 +63,43 @@ public class Settings extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		
 		addPreferencesFromResource(R.xml.settings);
-	}		
+		
+		findPreference("reset").setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			
+			public boolean onPreferenceClick(Preference preference) 
+			{
+				return resetSettings();				
+			}
+		});
+	}	
+	
+    /**
+     * Reset settings to their default value
+     * @return
+     */
+    private boolean resetSettings() 
+    {
+    	new AlertDialog.Builder(this)
+    		.setTitle(R.string.reset_label)
+    		.setMessage(R.string.reset_confirm)
+    		.setPositiveButton(android.R.string.yes, new OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) 
+				{
+			    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+			    	
+			    	Editor editor = prefs.edit();
+			    	editor.clear();
+			    	editor.commit();  
+			    	
+			    	finish();
+				}
+			})
+			.setNegativeButton(android.R.string.no, null)
+    		.show();
+    	
+    	return true;
+    }	
 	
 	/**
 	 * Build cache settings

@@ -17,8 +17,8 @@
         <activity 
             android:name=".Main" 
             android:label="@string/app_name" 
-            android:screenOrientation="portrait"> 
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat">                         
             
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,8 +28,8 @@
         
         <activity 
             android:name=".Settings" 
-            android:label="@string/settings_comm_label"> 
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">        	
+            android:label="@string/settings_comm_label"
+            android:theme="@style/Theme.AppCompat">                    	
         </activity>
 
         <service android:name=".Player"></service>
