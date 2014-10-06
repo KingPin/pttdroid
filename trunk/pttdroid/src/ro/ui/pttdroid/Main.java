@@ -33,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 
@@ -62,7 +63,7 @@ public class Main extends ActionBarActivity
     	super.onResume();
     	
 		microphoneSwitcher = new MicrophoneSwitcher();
-		microphoneSwitcher.init();
+//		microphoneSwitcher.init();
     }
     
     @Override
@@ -136,7 +137,7 @@ public class Main extends ActionBarActivity
         finish();
     }     
 	
-	private class MicrophoneSwitcher implements Runnable, OnTouchListener 
+	private class MicrophoneSwitcher implements Runnable, OnTouchListener, OnClickListener 
 	{	
 		private Player		player;
 
@@ -158,10 +159,18 @@ public class Main extends ActionBarActivity
 		
 		private ServiceConnection	playerServiceConnection;
 		
+		public MicrophoneSwitcher()
+		{
+			init();
+		}
+		
 		public void init()
 		{
 	    	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
-	    	microphoneImage.setOnTouchListener(this);
+	    	if(Settings.getSpeakMode()==Settings.SPEAK_MODE_TOUCH_HOLD)
+	    		microphoneImage.setOnTouchListener(this);
+	    	else
+	    		microphoneImage.setOnClickListener(this);
 	    
 	    	 
 	    	Intent intent = new Intent(Main.this, Player.class); 
@@ -219,6 +228,21 @@ public class Main extends ActionBarActivity
 	    	return true;
 	    }
 		
+		public void onClick(View v) 
+		{		
+	    	if(microphoneState==MicrophoneSwitcher.MIC_STATE_NORMAL) 
+	    	{    		
+    			recorder.resumeAudio();
+    			setMicrophoneState(MicrophoneSwitcher.MIC_STATE_PRESSED);
+	    	}
+			else if(microphoneState==MicrophoneSwitcher.MIC_STATE_PRESSED) 
+			{
+				setMicrophoneState(MicrophoneSwitcher.MIC_STATE_NORMAL);
+    			recorder.pauseAudio();    			
+    	
+			}
+		}
+		
 		public void setMicrophoneState(int state) 
 	    {
 	    	switch(state) {
@@ -264,7 +288,7 @@ public class Main extends ActionBarActivity
 					player = null;
 				}						
 			}
-		};
+		}		
 		
 	};
         

@@ -76,7 +76,16 @@
 		        
     </PreferenceScreen>
     
-    <Preference android:key="reset"
-        		android:title="@string/reset_label" />	
+    <ListPreference 
+		android:key="speak_mode"		
+		android:title="@string/speak_mode_title"
+		android:summary="@string/speak_mode_summary"
+		android:entries="@array/speak_mode"
+		android:entryValues="@array/speak_mode_values"
+		android:defaultValue="0" />
+    
+    <Preference 
+        android:key="reset"
+        android:title="@string/reset_label" />	
         			
 </PreferenceScreen>
