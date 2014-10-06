@@ -46,6 +46,9 @@
 		<string name="echo_on">Turn off</string>		
 		<string name="echo_off">Turn on</string>
 		    
+	<string name="speak_mode_title">Speak mode</string>    
+    <string name="speak_mode_summary"></string>
+    	
     <string name="reset_label">Reset</string>
     <string name="reset_confirm">Reset all settings to their default values?</string>
     	

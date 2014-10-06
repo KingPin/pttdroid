@@ -54,7 +54,12 @@ public class Settings extends PreferenceActivity
 	public static final boolean USE_SPEEX = true;
 	public static final boolean DONT_USE_SPEEX = false;	
 	public static final boolean ECHO_ON = true;
-	public static final boolean ECHO_OFF = false;	
+	public static final boolean ECHO_OFF = false;
+	
+	private static int speakMode;
+	
+	public static final int SPEAK_MODE_TOUCH_HOLD = 0;
+	public static final int SPEAK_MODE_TAP_SPEAK_TAP = 1;
 		
 	@SuppressWarnings("deprecation")
 	@Override
@@ -79,33 +84,36 @@ public class Settings extends PreferenceActivity
      */
     private boolean resetSettings() 
     {
-    	new AlertDialog.Builder(this)
-    		.setTitle(R.string.reset_label)
-    		.setMessage(R.string.reset_confirm)
-    		.setPositiveButton(android.R.string.yes, new OnClickListener() {
-				
-				public void onClick(DialogInterface dialog, int which) 
-				{
-			    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-			    	
-			    	Editor editor = prefs.edit();
-			    	editor.clear();
-			    	editor.commit();  
-			    	
-			    	finish();
-				}
-			})
-			.setNegativeButton(android.R.string.no, null)
-    		.show();
-    	
-    	return true;
+    	synchronized(Settings.class)
+    	{
+	    	new AlertDialog.Builder(this)
+	    		.setTitle(R.string.reset_label)
+	    		.setMessage(R.string.reset_confirm)
+	    		.setPositiveButton(android.R.string.yes, new OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int which) 
+					{
+				    	SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+				    	
+				    	Editor editor = prefs.edit();
+				    	editor.clear();
+				    	editor.commit();  
+				    	
+				    	finish();
+					}
+				})
+				.setNegativeButton(android.R.string.no, null)
+	    		.show();
+	    	
+	    	return true;
+    	}
     }	
 	
 	/**
 	 * Build cache settings
 	 * @param context
 	 */
-	public static void buildCache(Context context)
+	public static synchronized void buildCache(Context context)
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		Resources res = context.getResources();
@@ -136,7 +144,11 @@ public class Settings extends PreferenceActivity
         			res.getStringArray(R.array.speex_quality_values)[0]));
         	echoState = prefs.getBoolean(
         			"echo",
-        			ECHO_OFF);    		    		
+        			ECHO_OFF);
+        	
+        	speakMode = Integer.parseInt(prefs.getString(
+        			"speak_mode", 
+        			res.getStringArray(R.array.speak_mode_values)[0]));
 		}
 		catch(UnknownHostException e) 
 		{
@@ -144,44 +156,48 @@ public class Settings extends PreferenceActivity
 		}
 	}
 	
-	public static int getCastType() 
+	public static synchronized int getCastType() 
 	{
 		return castType;
 	}
 		
-	public static InetAddress getBroadcastAddr() 
+	public static synchronized InetAddress getBroadcastAddr() 
 	{
 		return broadcastAddr;
 	}	
 	
-	public static InetAddress getMulticastAddr() 
+	public static synchronized InetAddress getMulticastAddr() 
 	{
 		return multicastAddr;
 	}
 	
-	public static InetAddress getUnicastAddr() 
+	public static synchronized InetAddress getUnicastAddr() 
 	{
 		return unicastAddr;
 	}	
 	
-	public static int getPort() 
+	public static synchronized int getPort() 
 	{
 		return port;
 	}		
 
-	public static boolean useSpeex() 
+	public static synchronized boolean useSpeex() 
 	{
 		return useSpeex;
 	}	
 
-	public static int getSpeexQuality() 
+	public static synchronized int getSpeexQuality() 
 	{
 		return speexQuality;
 	}
 	
-	public static boolean getEchoState() 
+	public static synchronized boolean getEchoState() 
 	{
 		return echoState;
 	}
 
+	public static synchronized int getSpeakMode()
+	{
+		return speakMode;
+	}
 }
