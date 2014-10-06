@@ -29,6 +29,7 @@ import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
@@ -68,7 +69,22 @@ public class Settings extends PreferenceActivity
 		super.onCreate(savedInstanceState);
 		
 		addPreferencesFromResource(R.xml.settings);
+	
+		Validator portValidator = new Validator("^(6553[0-5]|655[0-2]\\d|65[0-4]\\d{2}|6[0-4]\\d{3}|[1-5]\\d{4}|[1-9]\\d{0,3})$");
 		
+		findPreference("port").setOnPreferenceChangeListener(portValidator);
+
+		Validator ipValidator = new Validator(
+				"^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+				"([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+				"([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\." +
+				"([01]?\\d\\d?|2[0-4]\\d|25[0-5])$"
+				);
+		
+		findPreference("broadcast_addr").setOnPreferenceChangeListener(ipValidator);
+		findPreference("multicast_addr").setOnPreferenceChangeListener(ipValidator);
+		findPreference("unicast_addr").setOnPreferenceChangeListener(ipValidator);
+				
 		findPreference("reset").setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			
 			public boolean onPreferenceClick(Preference preference) 
@@ -200,4 +216,23 @@ public class Settings extends PreferenceActivity
 	{
 		return speakMode;
 	}
+	
+	private class Validator implements OnPreferenceChangeListener 
+	{
+		
+		String pattern;
+		
+		public Validator(String pattern)
+		{
+			this.pattern = pattern;
+		}
+		
+		public boolean onPreferenceChange(Preference preference, Object newValue) 
+		{			
+			if(newValue!=null)
+				return ((String) newValue).matches(pattern);
+			
+			return true;
+		}
+	};
 }

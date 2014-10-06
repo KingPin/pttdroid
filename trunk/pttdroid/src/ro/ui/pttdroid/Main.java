@@ -63,7 +63,6 @@ public class Main extends ActionBarActivity
     	super.onResume();
     	
 		microphoneSwitcher = new MicrophoneSwitcher();
-//		microphoneSwitcher.init();
     }
     
     @Override
