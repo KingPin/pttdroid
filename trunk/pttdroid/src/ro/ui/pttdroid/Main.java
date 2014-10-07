@@ -73,6 +73,15 @@ public class Main extends ActionBarActivity
     	recorder.pauseAudio();
     	microphoneSwitcher.shutdown();
     }
+    
+    @Override
+    protected void onDestroy() 
+    {
+    	super.onDestroy();
+    	
+    	if(!isFinishing())
+    		shutdown();
+    }
                        
     @Override
     public boolean onCreateOptionsMenu(Menu menu) 
@@ -92,7 +101,8 @@ public class Main extends ActionBarActivity
     		startActivityForResult(i, 0);    		
     		return true;
     	case R.id.quit:
-    		shutdown();
+    		shutdown();    		
+    		finish();
     		return true;    		
     	default:
     		return super.onOptionsItemSelected(item);
@@ -132,8 +142,7 @@ public class Main extends ActionBarActivity
     	firstLaunch = true;    	
     	stopService(playerIntent);
     	recorder.shutdown();    		
-        Speex.close();                   
-        finish();
+        Speex.close();        
     }     
 	
 	private class MicrophoneSwitcher implements Runnable, OnTouchListener, OnClickListener 
@@ -167,9 +176,15 @@ public class Main extends ActionBarActivity
 		{
 	    	microphoneImage = (ImageView) findViewById(R.id.microphone_image);
 	    	if(Settings.getSpeakMode()==Settings.SPEAK_MODE_TOUCH_HOLD)
+	    	{
 	    		microphoneImage.setOnTouchListener(this);
+	    		microphoneImage.setOnClickListener(null);
+	    	}
 	    	else
+	    	{
+	    		microphoneImage.setOnTouchListener(null);
 	    		microphoneImage.setOnClickListener(this);
+	    	}
 	    
 	    	 
 	    	Intent intent = new Intent(Main.this, Player.class); 
@@ -264,6 +279,8 @@ public class Main extends ActionBarActivity
 		{
 			synchronized(running) 
 			{
+				setMicrophoneState(MicrophoneSwitcher.MIC_STATE_NORMAL);
+				
 				unbindService(playerServiceConnection);
 				handler.removeCallbacks(microphoneSwitcher);			
 				running = false;
