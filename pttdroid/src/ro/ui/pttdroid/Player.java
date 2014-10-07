@@ -35,6 +35,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
@@ -55,7 +56,6 @@ public class Player extends Service
         }
     }
 	
-	@SuppressWarnings("deprecation")
 	@Override
     public void onCreate() 
 	{		 
@@ -66,13 +66,16 @@ public class Player extends Service
 		phoneCallListener = new PhoneCallListener();
 		telephonyManager.listen(phoneCallListener, PhoneStateListener.LISTEN_CALL_STATE);
 				
-		Notification notification = new Notification(R.drawable.notif_icon, 
-				getText(R.string.app_name),
-		        System.currentTimeMillis());
-		Intent notificationIntent = new Intent(this, Main.class);
-		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		notification.setLatestEventInfo(this, getText(R.string.app_name),
-		        getText(R.string.app_running), pendingIntent);
+		Intent intent = new Intent(this, Main.class);
+		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+		Notification notification = new NotificationCompat.Builder(this)
+        	.setContentTitle(getText(R.string.app_name))
+        	.setContentText(getText(R.string.app_running))        	
+        	.setSmallIcon(R.drawable.notif_icon)
+        	.setContentIntent(pendingIntent)
+        	.build();
+
 		startForeground(1, notification);		
     }
 	
