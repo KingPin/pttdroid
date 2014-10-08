@@ -71,10 +71,7 @@ public class Main extends ActionBarActivity
     	super.onPause();
     	
     	recorder.pauseAudio();
-    	microphoneSwitcher.shutdown();
-    	
-    	if(!isFinishing())
-    		shutdown();
+    	microphoneSwitcher.shutdown();    	
     }
                            
     @Override
