@@ -60,7 +60,7 @@ public class Settings extends PreferenceActivity
 	private static int speakMode;
 	
 	public static final int SPEAK_MODE_TOUCH_HOLD = 0;
-	public static final int SPEAK_MODE_TAP_SPEAK_TAP = 1;
+	public static final int SPEAK_MODE_TAP = 1;
 		
 	@SuppressWarnings("deprecation")
 	@Override

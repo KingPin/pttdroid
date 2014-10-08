@@ -72,17 +72,11 @@ public class Main extends ActionBarActivity
     	
     	recorder.pauseAudio();
     	microphoneSwitcher.shutdown();
-    }
-    
-    @Override
-    protected void onDestroy() 
-    {
-    	super.onDestroy();
     	
     	if(!isFinishing())
     		shutdown();
     }
-                       
+                           
     @Override
     public boolean onCreateOptionsMenu(Menu menu) 
     {
